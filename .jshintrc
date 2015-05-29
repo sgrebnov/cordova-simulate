@@ -1,5 +1,6 @@
 {
   "node": true,
+  "browser": true,
   "bitwise": true,
   "undef": true,
   "trailing": true,

@@ -1,5 +1,5 @@
 var cordova = (function () {
-    var pluginHanders = {};
+    var pluginHandlers = {};
     var pluginDialogs = {};
 
     function injectPluginHtml(pluginId, htmlInfo) {
@@ -33,7 +33,7 @@ var cordova = (function () {
     function showDialog (dialogId) {
         var dialog = pluginDialogs[dialogId];
         if (!dialog) {
-            throw "No dialog defined with id " + dialogId;
+            throw 'No dialog defined with id ' + dialogId;
         }
 
         // We don't currently allow nesting dialogs, so close any existing dialog
@@ -48,23 +48,23 @@ var cordova = (function () {
 
     function hideDialog (dialogId) {
         if (dialogId !== currentDialogId) {
-            throw "Trying to hide a dialog that isn't currently showing: " + dialogId;
+            throw 'Trying to hide a dialog that isn\'t currently showing: ' + dialogId;
         }
 
         var dialog = pluginDialogs[dialogId];
         if (!dialog) {
-            throw "No dialog defined with id " + dialogId;
+            throw 'No dialog defined with id ' + dialogId;
         }
 
         currentDialogId = null;
-        document.getElementById('popup-window').style.display = "none";
-        dialog.style.display = "none";
+        document.getElementById('popup-window').style.display = 'none';
+        dialog.style.display = 'none';
     }
 
     function registerPluginHandlers(handlers) {
         for (var handlerId in handlers) {
             if (handlers.hasOwnProperty(handlerId)) {
-                pluginHanders[handlerId] = handlers[handlerId];
+                pluginHandlers[handlerId] = handlers[handlerId];
             }
         }
     }
@@ -73,7 +73,7 @@ var cordova = (function () {
         registerPluginHandlers: registerPluginHandlers,
         showDialog: showDialog,
         hideDialog: hideDialog,
-        pluginHanders: pluginHanders,
+        pluginHandlers: pluginHandlers,
         injectPluginHtml: injectPluginHtml
     };
 })();

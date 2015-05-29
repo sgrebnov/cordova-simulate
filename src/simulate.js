@@ -17,7 +17,7 @@ module.exports = function (args) {
         serverExtender: server.init
     }).then(function (serverInfo) {
         urlRoot = 'http://localhost:' + serverInfo.port + '/';
-        return cordova_serve.launchBrowser(target, urlRoot);
+        return cordova_serve.launchBrowser(target, urlRoot + 'index.html');
     }).then(function () {
         return cordova_serve.launchBrowser(target, urlRoot + 'simulator/index.html');
     });
