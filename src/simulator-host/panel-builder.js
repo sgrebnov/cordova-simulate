@@ -1,206 +1,199 @@
 var PanelBuilder = (function () {
-    function createPanel(pluginId, panelDefinition) {
-        var id = panelDefinition.getAttribute('id');
-        var caption = panelDefinition.getAttribute('caption');
+    // Define custom elements
 
-        // Create the outer section
-        var panelElement = document.createElement('section');
-        if (id) {
-            panelElement.id = id;
-        }
-        panelElement.className = 'cordova-box cordova-state-default cordova-corner cordova-box-open';
+    registerCustomElements();
+    function registerCustomElements() {
+        registerCustomElement('cordova-panel', null, function () {
+            this.shadowRoot.querySelector('section section').textContent = this.getAttribute('caption');
+        });
 
-        // Create the title bar
-        var captionElement = document.createElement('section');
-        captionElement.className = 'h2 cordova-header cordova-collapse-handle';
-        var captionText = document.createTextNode(caption);
-        captionElement.appendChild(captionText);
+        registerCustomElement('cordova-dialog', null, function () {
+            this.shadowRoot.querySelector('section section').textContent = this.getAttribute('caption');
+        });
 
-        panelElement.appendChild(captionElement);
+        registerCustomElement('cordova-panel-row');
 
-        // Create a section that will wrap the contents of the panel
-        var contentElement = document.createElement('section');
-        contentElement.className = 'cordova-info cordova-widget-content cordova-corner';
+        registerCustomElement('cordova-group');
 
-        processChildren(pluginId, contentElement, panelDefinition);
+        registerCustomElement('cordova-checkbox', null, function () {
+            this.shadowRoot.querySelector('label').textContent = this.getAttribute('label');
+        });
 
-        panelElement.appendChild(contentElement);
+        registerCustomElement('cordova-radio', {
+            checked: {
+                get: function () {
+                    return this.shadowRoot.getElementById('cordova-radio-template-input').checked;
+                }
+            }
+        }, function () {
+            this.shadowRoot.querySelector('label').textContent = this.getAttribute('caption');
 
-        return panelElement;
-    }
+            var isChecked = this.getAttribute('checked');
+            if (isChecked && isChecked.toLowerCase() === 'true') {
+                this.shadowRoot.querySelector('input').checked = true;
+            }
 
-    function createDialog(pluginId, dialogDefinition) {
-        var dialogElement = createPanel(pluginId, dialogDefinition);
-        dialogElement.style.display = 'none';
-        return dialogElement;
-    }
+            var parentGroup = findParent(this, 'cordova-group');
+            if (parentGroup) {
+                var radioButton = this.shadowRoot.getElementById('cordova-radio-template-input');
+                radioButton.setAttribute('name', parentGroup.id);
+            }
+        });
 
-    function processChildren(pluginId, newParent, definitionParent) {
-        var definitionChildren = definitionParent.childNodes;
-        for (var i = 0; i < definitionChildren.length; i++) {
-            var definitionChild = definitionChildren[i];
-            var newChild = null;
+        registerCustomElement('cordova-label', null, function () {
+            this.shadowRoot.querySelector('label').textContent = this.getAttribute('label');
+        });
 
-            var isElement = definitionChild.nodeType === Node.ELEMENT_NODE;
-            if (isElement && definitionChild.tagName.indexOf('-') > -1) {
-                newChild = processElement(definitionChild);
+        registerCustomElement('cordova-text-entry', {
+            value: {
+                set: function (value) {
+                    this.shadowRoot.querySelector('input').value = value;
+                }
+            }
+        }, function () {
+            this.shadowRoot.querySelector('label').textContent = this.getAttribute('label');
+        });
+
+        registerCustomElement('cordova-button', null, function () {
+            this.shadowRoot.querySelector('span').textContent = this.getAttribute('caption');
+        }, 'button');
+
+        registerCustomElement('cordova-file', {
+            input: {
+                get: function () {
+                    return this.shadowRoot.querySelector('input');
+                }
+            },
+            files: {
+                get: function () {
+                    return this.shadowRoot.querySelector('input').files;
+                }
+            }
+        }, 'input');
+
+        registerCustomElement('cordova-combo', {
+            options: {
+                get: function () {
+                    return this.shadowRoot.querySelector('select').options;
+                }
+            },
+            selectedIndex: {
+                get: function () {
+                    return this.shadowRoot.querySelector('select').selectedIndex;
+                }
+            },
+            appendChild: {
+                value: function (node) {
+                    this.shadowRoot.querySelector('select').appendChild(node);
+                }
+            }
+        }, function () {
+            var label = this.getAttribute('label');
+            if (label) {
+                this.shadowRoot.querySelector('label').textContent = this.getAttribute('label');
             } else {
-                newChild = definitionChild.cloneNode(false /* deep */);
+                this.shadowRoot.querySelector('select').style.width = '100%';
             }
-
-            if (newChild) {
-                newParent.appendChild(newChild);
-                newParent.appendChild(document.createTextNode('\n'));
-
-                if (isElement) {
-                    processChildren(pluginId, newChild, definitionChild);
-                }
-            }
-        }
+        }, 'select');
     }
 
-    // Simple hard-coded replacement for now
-    function processElement(definitionElement) {
-        var tag = definitionElement.tagName.toLowerCase();
-        var newElement = null;
-
-        switch(tag) {
-            case 'cordova-group':
-                newElement = document.createElement('section');
-                newElement.id = definitionElement.id;
-                break;
-
-            case 'cordova-panel-row':
-                newElement = document.createElement('section');
-                newElement.className = 'cordova-panel-row';
-                break;
-
-            case 'cordova-radio':
-                newElement = document.createElement('section');
-
-                var isInline = definitionElement.getAttribute('inline');
-                isInline = isInline && isInline.toLowerCase() === 'true';
-                newElement.className = isInline ? 'cordova-radio-wrapper cordova-inline' : 'cordova-radio-wrapper';
-
-                var radioElement = document.createElement('input');
-                if (definitionElement.id) {
-                    radioElement.id = definitionElement.id;
-                }
-                radioElement.type = 'radio';
-                var isChecked = definitionElement.getAttribute('checked');
-                if (isChecked && isChecked.toLowerCase() === 'true') {
-                    radioElement.checked = true;
-                }
-                var parentGroup = findParent(definitionElement, 'cordova-group');
-                if (parentGroup) {
-                    radioElement.name = parentGroup.id;
-                }
-                newElement.appendChild(radioElement);
-
-                var radioLabelElement = document.createElement('label');
-                radioLabelElement.setAttribute('for', radioElement.id);
-                radioLabelElement.className = 'cordova-radio-label';
-                var radioCaptionText = document.createTextNode(definitionElement.getAttribute('caption'));
-                radioLabelElement.appendChild(radioCaptionText);
-                newElement.appendChild(radioLabelElement);
-                break;
-
-            case 'cordova-button':
-                newElement = document.createElement('button');
-                newElement.className = 'cordova-button cordova-widget cordova-state-default cordova-corner cordova-button-text-only cordova-small-button';
-                if (definitionElement.id) {
-                    newElement.id = definitionElement.id;
-                }
-
-                var style = definitionElement.getAttribute('style');
-                if (style) {
-                    newElement.setAttribute('style', style);
-                }
-                newElement.style = definitionElement.style;
-
-                var span = document.createElement('span');
-                span.className = 'cordova-button-text';
-                var buttonCaptionText = document.createTextNode(definitionElement.getAttribute('caption'));
-                span.appendChild(buttonCaptionText);
-
-                newElement.appendChild(span);
-
-                break;
-
-            case 'cordova-file':
-                newElement = document.createElement('input');
-                newElement.type = 'file';
-                newElement.style.display = 'none';
-                if (definitionElement.id) {
-                    newElement.id = definitionElement.id;
-                }
-
-                break;
-
-            case 'cordova-combo':
-                newElement = document.createElement('section');
-                newElement.className = 'cordova-panel-row';
-
-                var comboLabelElement = document.createElement('label');
-                comboLabelElement.setAttribute('for', definitionElement.id);
-                var comboLabelText = document.createTextNode(definitionElement.getAttribute('label'));
-                comboLabelElement.appendChild(comboLabelText);
-                newElement.appendChild(comboLabelElement);
-
-                var selectElement = document.createElement('select');
-                selectElement.className = "cordova-state-default cordova-corner";
-                selectElement.id = definitionElement.id;
-                newElement.appendChild(selectElement);
-
-                break;
-
-            case 'cordova-text-entry':
-                newElement = document.createElement('section');
-                newElement.className = 'cordova-panel-row';
-
-                var textEntryLabelElement = document.createElement('label');
-                textEntryLabelElement.setAttribute('for', definitionElement.id);
-                var textEntryLabelText = document.createTextNode(definitionElement.getAttribute('label'));
-                textEntryLabelElement.appendChild(textEntryLabelText);
-                newElement.appendChild(textEntryLabelElement);
-
-                var inputElement = document.createElement('input');
-                inputElement.className = 'cordova-state-default cordova-corner';
-                inputElement.id = definitionElement.id;
-                inputElement.type = 'text';
-                newElement.appendChild(inputElement);
-
-                break;
-
-            default:
-                console.log('*** Unhandled tag: ' + tag);
-                newElement = definitionElement.cloneNode(false /* deep */);
-
+    function registerCustomElement(name, protoProperties, initializeCallback, eventTargetSelector) {
+        if (typeof initializeCallback !== 'function') {
+            eventTargetSelector = initializeCallback;
+            initializeCallback = null;
         }
 
-        processEventAttributes(definitionElement, newElement);
-        newElement.setAttribute('_cordovaTag', tag);
+        var constructorName = name.split('-').map(function (bit) {
+            return bit.charAt(0).toUpperCase() + bit.substr(1);
+        }).join('');
 
-        return newElement;
+        var proto = Object.create(HTMLElement.prototype);
+        if (protoProperties) {
+            Object.defineProperties(proto, protoProperties);
+        }
+
+        function initialize() {
+            this.initialized = true;
+
+            var eventTarget = eventTargetSelector && this.shadowRoot.querySelector(eventTargetSelector);
+            var atts = this.attributes;
+            Array.prototype.forEach.call(atts, function (att) {
+                if (att.name.indexOf('on') === 0) {
+                    var attValue = mungeEventHandler(this, att);
+                    if (eventTarget) {
+                        this.removeAttribute(att.name);
+                        eventTarget.setAttribute(att.name, attValue);
+                    } else {
+                        console.log('PROCESSING EVENT FOR OBJECT WITHOUT AN EVENT TARGET: ' + att.name);
+                        if (attValue != att.value) {
+                            this.setAttribute(att.name, attValue);
+                        }
+                    }
+                }
+            }, this);
+
+
+            // Initialize if it is required
+            initializeCallback && initializeCallback.call(this);
+
+            // Apply attributes
+        }
+
+        proto.attachedCallback = function () {
+            if (!this.initialized) {
+                // If it hasn't already been initialized, do so now.
+                initialize.call(this);
+            }
+        };
+
+        proto.createdCallback = function () {
+            var t = document.getElementById(name + '-template');
+            var shadowRoot = this.createShadowRoot();
+            shadowRoot.appendChild(document.importNode(t.content, true));
+
+            if (initializeCallback && this.ownerDocument === document) {
+                // If it is being created in the main document, initialize immediately.
+                initialize.call(this);
+            }
+        };
+
+        window[constructorName] = document.registerElement(name, {
+            prototype: proto
+        });
     }
 
-    function processEventAttributes(definitionElement, newElement) {
-        var atts = definitionElement.attributes;
-        for (var i = 0; i < atts.length; i++) {
-            var att = atts[i];
-            if (att.name.indexOf('on') === 0) {
-                newElement.setAttribute(att.name, att.value);
-            }
+    function mungeEventHandler(element, att) {
+
+        var attValue = att.value;
+        var parentPanel = findParent(element, ['cordova-panel', 'cordova-dialog']);
+        if (!parentPanel) {
+            return attValue;
         }
+
+        var pluginId = parentPanel.getAttribute('data-cordova-pluginid');
+        if (!pluginId) {
+            return attValue;
+        }
+
+        var handlers = plugins[pluginId];
+        if (!handlers) {
+            return attValue;
+        }
+
+        var pos = attValue.indexOf('(');
+        if (pos === -1) {
+            return attValue;
+        }
+
+        return handlers[attValue.substr(0, pos)] ? 'window.plugins[\'' + pluginId + '\'].' + attValue : attValue;
     }
 
     function findParent(element, tag) {
-        var parent = element.parentNode;
-        return parent ? parent.getAttribute('_cordovaTag') === tag || parent.tagName.toLowerCase() === tag ? parent : findParent(parent, tag) : null;
-    }
+        if (!Array.isArray(tag)) {
+            tag = [tag];
+        }
 
-    return {
-        createDialog: createDialog,
-        createPanel: createPanel
-    };
+        var parent = element.parentNode;
+        return parent && parent.tagName ? tag.indexOf(parent.tagName.toLowerCase()) > -1 ? parent : findParent(parent, tag) : null;
+    }
 })();

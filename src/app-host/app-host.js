@@ -117,9 +117,32 @@
         }
     }
 
+    var modules = {};
+    function Require(pluginId) {
+        // returns a require method tied to the pluginId
+        return function(moduleId) {
+            if (!modules[moduleId]) {
+                loadModule(moduleId);
+                if (!modules[moduleId]) {
+                    throw 'module ' + moduleId + ' not found.';
+                }
+            }
+
+        };
+
+        function loadModule(moduleId) {
+
+        }
+    }
+
+
     // Details of each plugin that has app-host code is injected when this file is served.
     var plugins = {
         /** PLUGINS **/
+    };
+
+    var localRequires = {
+      /** REQUIRES **/
     };
 
     Object.keys(plugins).forEach(function (pluginId) {

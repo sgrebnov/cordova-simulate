@@ -10,16 +10,15 @@ module.exports = function (args) {
     processArgs(args);
 
     // Launch the server with our handlers
-    cordova_serve.servePlatform({
-        platform: platform,
-        urlPathProcessor: server.processUrlPath,
+    cordova_serve.servePlatform(platform, {
+        urlPathHandler: server.handleUrlPath,
         streamHandler: server.streamFile,
         serverExtender: server.init
     }).then(function (serverInfo) {
         urlRoot = 'http://localhost:' + serverInfo.port + '/';
-        return cordova_serve.launchBrowser(target, urlRoot + 'index.html');
+        return cordova_serve.launchBrowser({target: target, url: urlRoot + 'index.html'});
     }).then(function () {
-        return cordova_serve.launchBrowser(target, urlRoot + 'simulator/index.html');
+        return cordova_serve.launchBrowser({target: target, url: urlRoot + 'simulator/index.html'});
     });
 };
 

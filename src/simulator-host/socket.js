@@ -37,7 +37,7 @@ var Socket = (function () {
         }
     });
 
-    window.addEventListener('load', function () {
+    /*window.addEventListener('load', function () {
         socket.emit('get-plugin-list', null, function (plugins) {
             if (plugins) {
                 plugins.forEach(function (pluginId) {
@@ -47,7 +47,7 @@ var Socket = (function () {
                 });
             }
         });
-    });
+    });*/
 
     function getSuccess(index) {
         return function (result) {

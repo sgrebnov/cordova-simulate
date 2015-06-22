@@ -1,36 +1,41 @@
+var plugins = {};
 var cordova = (function () {
     var pluginHandlers = {};
     var pluginDialogs = {};
 
-    function injectPluginHtml(pluginId, htmlInfo) {
-        // Note that we expect to get called even if the plugin has no simulation UI defined!
-
-        var fragment = FragmentLoader.load(htmlInfo);
-        if (!fragment) {
-            return false;
-        }
-
-        // Fragment contains the contents body of the imported HTML. We'll extract panels and dialogs and insert them
-        // into the appropriate container elements.
-
+    window.addEventListener('load', function () {
+        // Find the html import elements on the page
+        var htmlImports = document.querySelectorAll('link[rel="import"]');
         var panelContainer = document.getElementById('left-panel');
-        Array.prototype.forEach.call(fragment.querySelectorAll('cordova-panel'), function (panelDefinitionElement) {
-            var panel = PanelBuilder.createPanel(pluginId, panelDefinitionElement);
-            panelContainer.appendChild(panel);
-        });
-
         var dialogContainer = document.getElementById('dialog-wrapper');
-        Array.prototype.forEach.call(fragment.querySelectorAll('cordova-dialog'), function (dialogDefinitionElement) {
-            var dialog = PanelBuilder.createDialog(pluginId, dialogDefinitionElement);
-            dialogContainer.appendChild(dialog);
-            pluginDialogs[dialogDefinitionElement.id] = dialog;
-        });
+        Array.prototype.forEach.call(htmlImports, function (htmlImport) {
+            var href = htmlImport.href.split('/');
+            var pluginId = href[href.length - 2];
 
-        return true;
-    }
+            plugins[pluginId] = require(pluginId);
+
+            Array.prototype.forEach.call(htmlImport.import.querySelectorAll('cordova-panel'), function (panelDefinitionElement) {
+                panelDefinitionElement.setAttribute('data-cordova-pluginid', pluginId);
+                panelContainer.appendChild(panelDefinitionElement.cloneNode(true));
+            });
+            Array.prototype.forEach.call(htmlImport.import.querySelectorAll('cordova-dialog'), function (dialogDefinitionElement) {
+                dialogDefinitionElement.setAttribute('data-cordova-pluginid', pluginId);
+                var dialogElement = dialogDefinitionElement.cloneNode(true);
+                dialogElement.style.display = 'none';
+                dialogContainer.appendChild(dialogElement);
+                pluginDialogs[dialogDefinitionElement.id] = dialogElement;
+            });
+
+            if (plugins[pluginId].initialize) {
+                plugins[pluginId].initialize();
+            }
+
+        });
+    });
 
     var currentDialogId = null;
-    function showDialog (dialogId) {
+
+    function showDialog(dialogId) {
         var dialog = pluginDialogs[dialogId];
         if (!dialog) {
             throw 'No dialog defined with id ' + dialogId;
@@ -46,7 +51,7 @@ var cordova = (function () {
         dialog.style.display = null;
     }
 
-    function hideDialog (dialogId) {
+    function hideDialog(dialogId) {
         if (dialogId !== currentDialogId) {
             throw 'Trying to hide a dialog that isn\'t currently showing: ' + dialogId;
         }
@@ -73,7 +78,6 @@ var cordova = (function () {
         registerPluginHandlers: registerPluginHandlers,
         showDialog: showDialog,
         hideDialog: hideDialog,
-        pluginHandlers: pluginHandlers,
-        injectPluginHtml: injectPluginHtml
+        pluginHandlers: pluginHandlers
     };
 })();

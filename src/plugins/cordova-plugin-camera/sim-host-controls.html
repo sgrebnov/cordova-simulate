@@ -12,9 +12,9 @@
         <cordova-radio id="camera-sample" caption="Use built-in sample file"></cordova-radio>
         <cordova-panel-row>
             <cordova-radio id="camera-file" caption="Use this file:" inline="true"></cordova-radio>
-            <cordova-button style="position:relative;right:0;" onclick="document.getElementById('camera-filename').click()" caption="Choose File"></cordova-button>
+            <cordova-button onclick="document.getElementById('camera-filename').input.click()" caption="Choose File"></cordova-button>
         </cordova-panel-row>
-        <cordova-file hidden="true" id="camera-filename" onchange="CameraPlugin.updateImage()"></cordova-file>
+        <cordova-file hidden="true" id="camera-filename" onchange="updateImage()"></cordova-file>
         <img id="img" style="width: 100%; margin-top: 10px; display: none;" src="">
     </cordova-group>
 </cordova-panel>
@@ -22,10 +22,12 @@
 <!-- Dialogs -->
 <cordova-dialog id="camera-choose-image" caption="Camera: Choose Image">
     <img id="dialog-image" style="width:100%; display: none;" src="">
-    <cordova-button onclick="document.getElementById('camera-dialog-filename').click()" caption="Choose File"></cordova-button>
-    <cordova-button onclick="CameraPlugin.cancelDialog()" caption="Cancel"></cordova-button>
-    <cordova-button id="camera-use-image" style="display: none;" onclick="CameraPlugin.useImage()" caption="Use Image"></cordova-button>
-    <cordova-file hidden="true" id="camera-dialog-filename" onchange="CameraPlugin.updateDialogImage()"></cordova-file>
+    <cordova-panel-row>
+    <cordova-button onclick="document.getElementById('camera-dialog-filename').input.click()" caption="Choose File"></cordova-button>
+    <cordova-button onclick="cancelDialog()" caption="Cancel"></cordova-button>
+    <cordova-button id="camera-use-image" style="display: none;" onclick="useImage()" caption="Use Image"></cordova-button>
+    </cordova-panel-row>
+    <cordova-file hidden="true" id="camera-dialog-filename" onchange="updateDialogImage()"></cordova-file>
 </cordova-dialog>
 </body>
 </html>
