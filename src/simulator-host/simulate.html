@@ -4,18 +4,98 @@
     <meta charset="UTF-8">
     <title></title>
     <link href="simulate.css" rel="stylesheet"/>
+    <script src="../../node_modules/webcomponents.js/webcomponents.min.js"></script>
     <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
     <script src="fragment-loader.js"></script>
     <script src="socket.js"></script>
     <script src="messages.js"></script>
     <script src="panel-builder.js"></script>
     <script src="simulate.js"></script>
+    <script src="require.js"></script>
+
+    <template id="cordova-panel-template">
+        <section class="cordova-panel cordova-corner cordova-panel-open">
+            <section class="h2 cordova-header cordova-collapse-handle"></section>
+            <section class="cordova-info cordova-widget-content">
+                <content></content>
+            </section>
+        </section>
+    </template>
+
+    <template id="cordova-dialog-template">
+        <section class="cordova-panel cordova-corner cordova-panel-open">
+            <section class="h2 cordova-header cordova-collapse-handle"></section>
+            <section class="cordova-info cordova-widget-content">
+                <content></content>
+            </section>
+        </section>
+    </template>
+
+    <template id="cordova-panel-row-template">
+        <section class="cordova-panel-row">
+            <content></content>
+        </section>
+    </template>
+
+    <template id="cordova-group-template">
+        <section>
+            <content></content>
+        </section>
+    </template>
+
+    <template id="cordova-radio-template">
+        <section class="cordova-radio-wrapper">
+            <input id="cordova-radio-template-input" type="radio">
+            <label for="cordova-radio-template-input" class="cordova-radio-label"></label>
+        </section>
+    </template>
+
+    <template id="cordova-checkbox-template">
+        <section class="cordova-panel-row">
+            <label for="cordova-checkbox-template-input"></label>
+            <input id="cordova-checkbox-template-input" type="checkbox">
+        </section>
+    </template>
+
+    <template id="cordova-label-template">
+        <label></label>
+    </template>
+
+    <template id="cordova-text-entry-template">
+        <section class="cordova-panel-row">
+            <label for="cordova-text-entry-template-input"></label>
+            <input id="cordova-text-entry-template-input" class="cordova-state-default" type="text">
+        </section>
+    </template>
+
+    <template id="cordova-button-template">
+        <button class="cordova-button cordova-widget cordova-state-default cordova-button-text-only">
+            <span class="cordova-button-text"></span></button>
+    </template>
+
+    <template id="cordova-file-template">
+        <input type="file" style="display: none;">
+    </template>
+
+    <template id="cordova-combo-template">
+        <section class="cordova-panel-row">
+            <label for="cordova-combo-template-select"></label>
+            <select id="cordova-combo-template-select"
+                    class="cordova-state-default cordova-select"></select>
+        </section>
+    </template>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('*** MAIN DOCUMENT DOMContentLoaded ***');
+        })
+    </script>
 </head>
-<body>
+<body onload="console.log('*** body.onload ***')">
 <section id="left-panel" class="cordova-left cordova-main"></section>
 <section id="popup-window" class="cordova-overlay cordova-main" style="display: none;">
     <section id="dialog-wrapper" class="cordova-dialog"></section>
 </section>
-<section id="no-plugins-text" class="cordova-no-plugins cordova-main" style="display: none;"><p class="cordova-no-plugins-text">NO SUPPORTED PLUGINS FOUND</p></section>
+<section id="no-plugins-text" class="cordova-no-plugins cordova-main" style="display: none;"><p
+        class="cordova-no-plugins-text">NO SUPPORTED PLUGINS FOUND</p></section>
 </body>
 </html>

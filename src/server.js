@@ -19,10 +19,11 @@
  under the License.
  */
 
-var fs              = require('fs'),
-    path            = require('path'),
-    replaceStream   = require('replacestream'),
-    server          = require('cordova-serve');
+var fs            = require('fs'),
+    path          = require('path'),
+    replaceStream = require('replacestream'),
+    server        = require('cordova-serve'),
+    wrap          = require('wrap-stream');
 
 var pluginPaths = [],
     pluginList;
@@ -30,7 +31,7 @@ var pluginPaths = [],
 var PLUGIN_SIMULATION_FILES = {
     'SIM_HOST_HTML': 'sim-host-controls.html',
     'SIM_HOST_JS': 'sim-host-controls.js',
-    'APP_HOST_HTML': 'sim-app-host.js'
+    'APP_HOST_JS': 'sim-app-host.js'
 };
 
 function init(server, root) {
@@ -99,7 +100,7 @@ function init(server, root) {
 
                 // We provide an href for the simulation host to use when processing this html (for resolving script and
                 // img references, for example).
-                var href = 'simulator/plugin/' + pluginId + '/' + pluginHtmlFileName;
+                var href = 'plugin/' + pluginId + '/' + pluginHtmlFileName;
                 var returnValue = {href: href, html: ''};
 
                 if (fs.existsSync(pluginFilePath)) {
@@ -142,6 +143,10 @@ function init(server, root) {
                 }
             });
         }
+
+        if (pluginList.indexOf('cordova-plugin-geolocation') === -1) {
+            pluginList.push('cordova-plugin-geolocation');
+        }
     }
 
     function initPluginPaths() {
@@ -180,15 +185,17 @@ function init(server, root) {
     }
 }
 
-function processUrlPath(urlPath, request, response, do302, do404) {
-    // Possible return values:
-    // 1. {filePath: value}: If value is a non-empty string, this will be the full qualified path the caller should use.
-    //    Otherwise, if value is falsy, we have done no processing and the caller should determine the file path.
-    // 2. null: We have handled the request - caller should do no more.
+function handleUrlPath(urlPath, request, response, do302, do404, serveFile) {
+    if (urlPath.indexOf('/node_modules/') === 0) {
+        // Something in our node_modules...
+        serveFile(path.resolve(__dirname, '..', urlPath.substr(1)));
+        return;
+    }
 
     if (urlPath.indexOf('/simulator/') !== 0) {
         // Not a path we care about
-        return {filePath: null};
+        serveFile();
+        return;
     }
 
     var splitPath = urlPath.split('/');
@@ -198,7 +205,8 @@ function processUrlPath(urlPath, request, response, do302, do404) {
     splitPath.shift();
 
     if (splitPath[0] === 'app-host') {
-        return {filePath: path.join(__dirname, splitPath.join('/'))};
+        serveFile(path.join(__dirname, splitPath.join('/')));
+        return;
     }
 
     if (splitPath[0] === 'plugin') {
@@ -207,7 +215,8 @@ function processUrlPath(urlPath, request, response, do302, do404) {
 
         var pluginId = splitPath.shift();
         var pluginPath = pluginPaths[pluginId];
-        return {filePath: pluginPath && path.join(pluginPath, splitPath.join('/'))};
+        serveFile(pluginPath && path.join(pluginPath, splitPath.join('/')));
+        return;
     }
 
     var filePath = splitPath.join('/');
@@ -215,11 +224,23 @@ function processUrlPath(urlPath, request, response, do302, do404) {
         // Allow 'index.html' as a synonym for 'simulate.html'
         filePath = 'simulate.html';
     }
-    return {filePath: path.join(__dirname, 'simulator-host', filePath)};
+    serveFile(path.join(__dirname, 'simulator-host', filePath));
+}
+
+function processPluginRequires(pluginCode) {
+    // Look for x, where x is in require('x') or require("x")
+    var regexp = /require\(["']([^'^"]+)["']\)/g;
+    var result;
+    var requires = [];
+    while ((result = regexp.exec(pluginCode)) !== null) {
+        if (result[1].indexOf('.') === 0) {
+            requires.push(result[1]);
+        }
+    }
+    return requires.length ? requires : null;
 }
 
 function streamFile(filePath, request, response) {
-    var readStream;
     if (request.url === '/index.html' || request.url === '/') {
         // Inject plugin simulation app-host <script> references into index.html
         var scriptSources = [
@@ -230,33 +251,135 @@ function streamFile(filePath, request, response) {
             return '<script src="' + scriptSource + '"></script>';
         }).join('');
 
-        readStream = fs.createReadStream(filePath);
-        server.sendStream(filePath, request, response, readStream.pipe(replaceStream(/<\s*head\s*>/, '<head>' + scriptTags)));
+        server.sendStream(filePath, request, response, fs.createReadStream(filePath).pipe(replaceStream(/<\s*head\s*>/, '<head>' + scriptTags)), true);
         return true;
     }
     if (request.url === '/simulator/app-host/app-host.js') {
-        // Inject plugin simulation code. This is a bit nasty - we should probably create read streams for the
-        // plugin simulation files, but good enough for prototype.
-        var appHostScriptBasename = PLUGIN_SIMULATION_FILES.APP_HOST_HTML;
-        var pluginCode = [];
-        var pluginTemplate = '\'%PLUGINID%\': (function (module) {\n%PLUGINCODE%\nreturn module.exports(new Messages(\'%PLUGINID%\'));\n})({exports: new Function()})\n';
-        pluginList.forEach(function (pluginId) {
-            var pluginPath = pluginPaths[pluginId];
-            var pluginAppHostScriptFile = pluginPath && path.join(pluginPath, appHostScriptBasename);
-            if (pluginAppHostScriptFile && fs.existsSync(pluginAppHostScriptFile)) {
-                pluginCode.push(pluginTemplate.replace(/%PLUGINID%/g, pluginId).replace(/%PLUGINCODE%/g, fs.readFileSync(pluginAppHostScriptFile, 'utf8')));
-            }
-        });
-
-        readStream = fs.createReadStream(filePath);
-        server.sendStream(filePath, request, response, readStream.pipe(replaceStream('/** PLUGINS **/', pluginCode.join(','))));
+        streamAppHost(filePath, request, response);
         return true;
     }
-    return false;
+    if (request.url === '/simulator/index.html' || request.url === '/simulator/simulate.html') {
+        streamSimulator(filePath, request, response);
+        return true;
+    }
+
+    var requestPathArray = request.url.split('/');
+    if (requestPathArray[1] === 'simulator' && requestPathArray[2] === 'plugin' && requestPathArray[4] === PLUGIN_SIMULATION_FILES.SIM_HOST_JS) {
+        var pluginId = requestPathArray[3];
+
+        var pluginCode = fs.readFileSync(filePath, 'utf-8');
+        var pluginRequires = processPluginRequires(pluginCode);
+        var requireCode = '';
+        var requireCall = 'function (requireId) {\n' +
+            'return Require.require(\'' + pluginId + '\', requireId);\n' +
+            '}';
+
+        if (pluginRequires) {
+            var requireTemplate = 'Require.registerModule(\'%PLUGINID%\', \'%REQUIREID%\', (function (module, require) {\n%REQUIRECODE%\nreturn module.exports;\n})({exports:{}}, ' + requireCall + ')';
+            //var requirePluginTemplate = 'var localRequires = {\n%PLUGINREQUIRES%\n}';
+            //var requireCodeForPlugin = [];
+            var pluginPath = pluginPaths[pluginId];
+            pluginRequires.forEach(function (requireId) {
+                var requireScriptFile = findRequireFile(pluginPath, requireId);
+                if (!requireScriptFile) {
+                    console.error('Cannot find module \'' + requireId + '\' for plugin \'' + pluginId + '\'');
+                } else {
+                    requireCode += requireTemplate.replace(/%PLUGINID%/g, pluginId).replace(/%REQUIREID%/g, requireId).replace(/%REQUIRECODE%/g, fs.readFileSync(requireScriptFile, 'utf8')) + ');\n\n';
+                }
+            });
+        }
+
+        var beforeCode = requireCode + '\n' +
+                'var plugins = plugins || {};\n' +
+                'plugins[\'' + pluginId + '\'] = (function (module, require) {\n\n';
+        var afterCode =
+                '\nreturn module.exports;\n' +
+                '})({exports: {}}, ' + requireCall + ');\n';
+
+//requireCode
+        server.sendStream(filePath, request, response, fs.createReadStream(filePath).pipe(wrap(beforeCode, afterCode)), true);
+        return true;
+    }
+
+    server.sendStream(filePath, request, response, null, true);
+    return true;
+}
+
+function streamSimulator(filePath, request, response) {
+    // Inject references to simulation HTML files
+    var simHostHtmlBasename = PLUGIN_SIMULATION_FILES.SIM_HOST_HTML;
+    var pluginHtml = [];
+    var pluginLinkTemplate = '<link id="%PLUGINID%-import" rel="import" href="plugin/%PLUGINID%/sim-host-controls.html">';
+    pluginList.forEach(function (pluginId) {
+        var pluginPath = pluginPaths[pluginId];
+        var pluginSimHostHtmlFile = pluginPath && path.join(pluginPath, simHostHtmlBasename);
+        if (pluginSimHostHtmlFile && fs.existsSync(pluginSimHostHtmlFile)) {
+            pluginHtml.push(pluginLinkTemplate.replace(/%PLUGINID%/g, pluginId));
+        }
+    });
+    server.sendStream(filePath, request, response, fs.createReadStream(filePath).pipe(replaceStream(/<\/\s*head\s*>/, pluginHtml.join('\n') + '</head>')), true);
+}
+
+function streamAppHost(filePath, request, response) {
+    var appHostScriptBasename = PLUGIN_SIMULATION_FILES.APP_HOST_JS;
+    var pluginCode = [];
+    var allPluginRequires = {};
+    var pluginScriptTemplate = '\'%PLUGINID%\': (function (module, require) {\n%PLUGINCODE%\nreturn module.exports(new Messages(\'%PLUGINID%\'));\n})({exports: function () {}}, Require(\'%PLUGINID%\'))';
+    pluginList.forEach(function (pluginId) {
+        var pluginPath = pluginPaths[pluginId];
+        var pluginAppHostScriptFile = pluginPath && path.join(pluginPath, appHostScriptBasename);
+        if (pluginAppHostScriptFile && fs.existsSync(pluginAppHostScriptFile)) {
+            var code = fs.readFileSync(pluginAppHostScriptFile, 'utf8');
+            var pluginRequires = processPluginRequires(code);
+            if (pluginRequires) {
+                allPluginRequires[pluginId] = pluginRequires;
+            }
+            pluginCode.push(pluginScriptTemplate.replace(/%PLUGINID%/g, pluginId).replace(/%PLUGINCODE%/g, code));
+        }
+    });
+
+    // Include local required modules
+    var requireCodeForAllPlugins = [];
+    var requirePluginTemplate = '\'%PLUGINID%\': {\n%PLUGINREQUIRES%\n}';
+    var requireTemplate = '\'%REQUIREID%\': (function (module, require) {\n%REQUIRECODE%\n})(function () {}, Require())';
+    pluginList.forEach(function (pluginId) {
+        if (allPluginRequires[pluginId]) {
+            var requireCodeForPlugin = [];
+            var pluginPath = pluginPaths[pluginId];
+            allPluginRequires[pluginId].forEach(function (requireId) {
+                var requireScriptFile = findRequireFile(pluginPath, requireId);
+                if (!requireScriptFile) {
+                    console.error('Cannot find module \'' + requireId + '\' for plugin \'' + pluginId + '\'');
+                } else {
+                    var requireCode = fs.readFileSync(requireScriptFile, 'utf8');
+                    requireCodeForPlugin.push(requireTemplate.replace(/%REQUIREID%/g, requireId).replace(/%REQUIRECODE%/g, requireCode));
+                }
+            });
+            requireCodeForAllPlugins.push(requirePluginTemplate.replace(/%PLUGINID%/g, pluginId).replace(/%PLUGINREQUIRES%/g, requireCodeForPlugin.join(',')));
+        }
+    });
+
+    server.sendStream(filePath, request, response, fs.createReadStream(filePath).pipe(replaceStream('/** PLUGINS **/', pluginCode.join(',\n'))).pipe(replaceStream('/** REQUIRES **/', requireCodeForAllPlugins.join(','))), true);
+}
+
+function findRequireFile(pluginPath, requireId) {
+    var requireScriptFile = path.resolve(pluginPath, requireId);
+    if (fs.existsSync(requireScriptFile)) {
+        return requireScriptFile;
+    }
+    requireScriptFile = path.resolve(pluginPath, requireId + '.js');
+    if (fs.existsSync(requireScriptFile)) {
+        return requireScriptFile;
+    }
+    requireScriptFile = path.resolve(pluginPath, requireId + '.json');
+    if (fs.existsSync(requireScriptFile)) {
+        return requireScriptFile;
+    }
+    return null;
 }
 
 module.exports = {
-    processUrlPath: processUrlPath,
+    handleUrlPath: handleUrlPath,
     streamFile: streamFile,
     init: init
 };

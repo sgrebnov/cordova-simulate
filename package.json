@@ -21,10 +21,13 @@
   },
   "homepage": "https://github.com/TimBarham/cordova-simulator",
   "dependencies": {
+    "browserify": "^10.2.4",
     "combined-stream": "^1.0.3",
     "cordova-serve": "^0.1.1",
     "replacestream": "^2.1.0",
-    "socket.io": "^1.3.5"
+    "socket.io": "^1.3.5",
+    "webcomponents.js": "^0.7.2",
+    "wrap-stream": "^2.0.0"
   },
   "engines": {
     "node": ">= 0.12.0",
