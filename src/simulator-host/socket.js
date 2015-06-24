@@ -1,5 +1,12 @@
-var Socket = (function () {
-    var socket = io();
+var cordova = require('cordova');
+
+var socket;
+
+module.exports.initialize = function () {
+    console.log('socket.initialize()');
+
+    socket = io();
+    module.exports.socket = socket;
 
     socket.emit('register-simulation-host');
     socket.on('exec', function (data) {
@@ -28,6 +35,8 @@ var Socket = (function () {
         }
 
         var handlerId = service + '.' + action;
+        console.log('cordova.pluginHandlers');
+        console.log(cordova.pluginHandlers);
         var handler = cordova.pluginHandlers[handlerId];
 
         if (!handler) {
@@ -36,34 +45,20 @@ var Socket = (function () {
             handler(success, failure, service, action, data.args);
         }
     });
+}
 
-    /*window.addEventListener('load', function () {
-        socket.emit('get-plugin-list', null, function (plugins) {
-            if (plugins) {
-                plugins.forEach(function (pluginId) {
-                    socket.emit('get-plugin-info', pluginId, function (htmlInfo) {
-                        cordova.injectPluginHtml(pluginId, htmlInfo);
-                    });
-                });
-            }
-        });
-    });*/
+function getSuccess(index) {
+    return function (result) {
+        console.log('Success callback for index: ' + index + '; result: ' + result);
+        var data = {index: index, result: result};
+        socket.emit('exec-success', data);
+    };
+}
 
-    function getSuccess(index) {
-        return function (result) {
-            console.log('Success callback for index: ' + index + '; result: ' + result);
-            var data = {index: index, result: result};
-            socket.emit('exec-success', data);
-        };
-    }
-
-    function getFailure(index) {
-        return function (error) {
-            console.log('Failure callback for index: ' + index + '; error: ' + error);
-            var data = {index: index, error: error};
-            socket.emit('exec-failure', data);
-        };
-    }
-
-    return {socket: socket};
-})();
+function getFailure(index) {
+    return function (error) {
+        console.log('Failure callback for index: ' + index + '; error: ' + error);
+        var data = {index: index, error: error};
+        socket.emit('exec-failure', data);
+    };
+}

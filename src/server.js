@@ -23,7 +23,8 @@ var browserify    = require('browserify'),
     fs            = require('fs'),
     path          = require('path'),
     replaceStream = require('replacestream'),
-    server        = require('cordova-serve');
+    server        = require('cordova-serve'),
+    through2      = require('through2');
 
 var pluginPaths = [],
     pluginList;
@@ -118,10 +119,12 @@ function init(server, root) {
     });
 
     function emitToSimulationHost(msg, data, callback) {
+        console.log('APP-HOST to SIM-HOST: ' + msg);
         emitToHosts(simulation_host_socket, msg, data, callback);
     }
 
     function emitToAppHost(msg, data, callback) {
+        console.log('SIM-HOST to APP-HOST: ' + msg);
         emitToHosts(app_host_socket, msg, data, callback);
     }
 
@@ -263,19 +266,46 @@ function streamFile(filePath, request, response) {
         return true;
     }
 
+    if (request.url === '/simulator/simulate.js') {
+        streamSimulatorJs(filePath, request, response)
+        return true;
+    }
+
     var requestPathArray = request.url.split('/');
     if (requestPathArray[1] === 'simulator' && requestPathArray[2] === 'plugin' && requestPathArray[4] === PLUGIN_SIMULATION_FILES.SIM_HOST_JS) {
-        // TODO: Optimize this so we build the file once and reuse it, unless dependencies have changed
-        var pluginId = requestPathArray[3];
-        var b = browserify({paths: [path.join(__dirname, 'modules')]});
-        b.require(filePath, {expose: pluginId});
-        var bundle = b.bundle();
-        server.sendStream(filePath, request, response, bundle, true);
+        streamPluginSimHostJs(filePath, requestPathArray[3], request, response);
         return true;
     }
 
     server.sendStream(filePath, request, response, null, true);
     return true;
+}
+
+function streamPluginSimHostJs(filePath, pluginId, request, response) {
+    // TODO: Optimize this so we build the file once and reuse it, unless dependencies have changed
+    var b = browserify({paths: [path.join(__dirname, 'modules')]});
+    b.exclude('cordova');
+    b.exclude('db');
+    b.exclude('event');
+    b.exclude('exception');
+    b.exclude('sim-constants');
+    b.exclude('utils');
+    b.require(filePath, {expose: pluginId});
+    var bundle = b.bundle();
+    server.sendStream(filePath, request, response, bundle, true);
+}
+
+function streamSimulatorJs(filePath, request, response) {
+    var b = browserify({paths: [path.join(__dirname, 'modules')]});
+    b.add(filePath);
+    b.require('cordova');
+    b.require('db');
+    b.require('event');
+    b.require('exception');
+    b.require('sim-constants');
+    b.require('utils');
+    var bundle = b.bundle();
+    server.sendStream(filePath, request, response, bundle, true);
 }
 
 function streamSimulator(filePath, request, response) {
@@ -294,61 +324,42 @@ function streamSimulator(filePath, request, response) {
 }
 
 function streamAppHost(filePath, request, response) {
-    var appHostScriptBasename = PLUGIN_SIMULATION_FILES.APP_HOST_JS;
     var pluginCode = [];
-    var allPluginRequires = {};
-    var pluginScriptTemplate = '\'%PLUGINID%\': (function (module, require) {\n%PLUGINCODE%\nreturn module.exports(new Messages(\'%PLUGINID%\'));\n})({exports: function () {}}, Require(\'%PLUGINID%\'))';
+
+    var b = browserify({paths: [path.join(__dirname, 'modules')]});
+    b.transform(function (file) {
+        if (file === filePath) {
+            var data = '';
+            return through2(function (buf, encoding, cb) {
+                data += buf;
+                cb();
+            }, function (cb) {
+                data = data.replace('/** PLUGINS **/', pluginCode.join(',\n'));
+                this.push(data);
+                cb();
+            });
+        } else {
+            // No-op for other files
+            return through2(function (chunk, encoding, cb) {
+                cb(null, chunk);
+            });
+        }
+    });
+
+    b.add(filePath);
+
+    var pluginTemplate = '\'%PLUGINID%\': require(\'%PLUGINID%\')';
     pluginList.forEach(function (pluginId) {
         var pluginPath = pluginPaths[pluginId];
-        var pluginAppHostScriptFile = pluginPath && path.join(pluginPath, appHostScriptBasename);
+        var pluginAppHostScriptFile = pluginPath && path.join(pluginPath, PLUGIN_SIMULATION_FILES.APP_HOST_JS);
         if (pluginAppHostScriptFile && fs.existsSync(pluginAppHostScriptFile)) {
-            var code = fs.readFileSync(pluginAppHostScriptFile, 'utf8');
-            var pluginRequires = processPluginRequires(code);
-            if (pluginRequires) {
-                allPluginRequires[pluginId] = pluginRequires;
-            }
-            pluginCode.push(pluginScriptTemplate.replace(/%PLUGINID%/g, pluginId).replace(/%PLUGINCODE%/g, code));
+            pluginCode.push(pluginTemplate.replace(/%PLUGINID%/g, pluginId).replace(/%PLUGINPATH%/g, pluginAppHostScriptFile.replace(/\\/g, '\\\\')));
+            b.require(pluginAppHostScriptFile, {expose: pluginId});
         }
     });
 
-    // Include local required modules
-    var requireCodeForAllPlugins = [];
-    var requirePluginTemplate = '\'%PLUGINID%\': {\n%PLUGINREQUIRES%\n}';
-    var requireTemplate = '\'%REQUIREID%\': (function (module, require) {\n%REQUIRECODE%\n})(function () {}, Require())';
-    pluginList.forEach(function (pluginId) {
-        if (allPluginRequires[pluginId]) {
-            var requireCodeForPlugin = [];
-            var pluginPath = pluginPaths[pluginId];
-            allPluginRequires[pluginId].forEach(function (requireId) {
-                var requireScriptFile = findRequireFile(pluginPath, requireId);
-                if (!requireScriptFile) {
-                    console.error('Cannot find module \'' + requireId + '\' for plugin \'' + pluginId + '\'');
-                } else {
-                    var requireCode = fs.readFileSync(requireScriptFile, 'utf8');
-                    requireCodeForPlugin.push(requireTemplate.replace(/%REQUIREID%/g, requireId).replace(/%REQUIRECODE%/g, requireCode));
-                }
-            });
-            requireCodeForAllPlugins.push(requirePluginTemplate.replace(/%PLUGINID%/g, pluginId).replace(/%PLUGINREQUIRES%/g, requireCodeForPlugin.join(',')));
-        }
-    });
-
-    server.sendStream(filePath, request, response, fs.createReadStream(filePath).pipe(replaceStream('/** PLUGINS **/', pluginCode.join(',\n'))).pipe(replaceStream('/** REQUIRES **/', requireCodeForAllPlugins.join(','))), true);
-}
-
-function findRequireFile(pluginPath, requireId) {
-    var requireScriptFile = path.resolve(pluginPath, requireId);
-    if (fs.existsSync(requireScriptFile)) {
-        return requireScriptFile;
-    }
-    requireScriptFile = path.resolve(pluginPath, requireId + '.js');
-    if (fs.existsSync(requireScriptFile)) {
-        return requireScriptFile;
-    }
-    requireScriptFile = path.resolve(pluginPath, requireId + '.json');
-    if (fs.existsSync(requireScriptFile)) {
-        return requireScriptFile;
-    }
-    return null;
+    var bundle = b.bundle();
+    server.sendStream(filePath, request, response, bundle, true);
 }
 
 module.exports = {

@@ -1,3 +1,5 @@
+var cordova = require('cordova');
+
 function handleGetDeviceInfo(success, fail, service, action, args) {
     success({
         model: document.getElementById('device-model').value,
@@ -307,13 +309,8 @@ function initialize() {
 }
 
 function handleSelectDevice() {
-    console.log('handleSelectDevice()');
-
     var deviceList = document.getElementById('device-list');
     var option = deviceList.options[deviceList.selectedIndex];
-    console.log('option');
-    console.log(option);
-
     document.getElementById('device-model').value = option.getAttribute('_model');
     document.getElementById('device-platform').value = option.getAttribute('_platform');
     document.getElementById('device-uuid').value = option.getAttribute('_uuid');

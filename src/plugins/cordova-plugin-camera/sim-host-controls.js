@@ -1,3 +1,5 @@
+var cordova = require('cordova');
+
 var _success, _fail;
 
 function handleTakePicture(success, fail, service, action, args) {
