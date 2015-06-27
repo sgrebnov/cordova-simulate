@@ -29,8 +29,7 @@ var db = require('db'),
         'accuracy': 150,
         'altitudeAccuracy': 80,
         'heading': 0,
-        'speed': 0,
-        'cellID': 321654
+        'speed': 0
     },
     self;
 
@@ -48,8 +47,7 @@ function _validatePositionInfo(pInfo) {
     isNaN(pInfo.accuracy) ||
     isNaN(pInfo.altitudeAccuracy) ||
     isNaN(pInfo.heading) ||
-    isNaN(pInfo.speed) ||
-    isNaN(pInfo.cellID))) ? true : false;
+    isNaN(pInfo.speed))) ? true : false;
 }
 
 self = module.exports = {

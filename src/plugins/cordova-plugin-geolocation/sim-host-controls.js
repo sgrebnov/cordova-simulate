@@ -49,16 +49,14 @@ function _updateGpsMap() {
 }
 
 function _updateGpsMapZoom(goUp) {
-    if (goUp && _gpsMapZoomLevel < constants.GEO.MAP_ZOOM_MAX) {
-        _gpsMapZoomLevel++;
-    }
-    else if (!goUp && _gpsMapZoomLevel > constants.GEO.MAP_ZOOM_MIN) {
-        _gpsMapZoomLevel--;
-    }
-    document.getElementById(constants.GEO.MAP_ZOOM_LEVEL_CONTAINER).innerHTML = _gpsMapZoomLevel;
-
+    var inc = goUp? 1 : -1;
+    _gpsMapZoomSet(_gpsMapZoomLevel + inc);
     _updateGpsMap();
+}
 
+function _gpsMapZoomSet(value) {
+    _gpsMapZoomLevel = Math.max(Math.min(value, constants.GEO.MAP_ZOOM_MAX), constants.GEO.MAP_ZOOM_MIN);
+    document.getElementById(constants.GEO.MAP_ZOOM_LEVEL_CONTAINER).innerHTML = _gpsMapZoomLevel;
     db.save(constants.GEO.MAP_ZOOM_KEY, _gpsMapZoomLevel);
 }
 
@@ -113,7 +111,6 @@ module.exports = {
             altitudeAccuracy  = document.getElementById(GEO_OPTIONS.ALTITUDE_ACCURACY),
             heading           = document.getElementById(GEO_OPTIONS.HEADING),
             speed             = document.getElementById(GEO_OPTIONS.SPEED),
-            cellID            = document.getElementById(GEO_OPTIONS.CELL_ID),
             delay             = document.getElementById(GEO_OPTIONS.DELAY),
             delayLabel        = document.getElementById(GEO_OPTIONS.DELAY_LABEL),
             headingLabel      = document.getElementById(GEO_OPTIONS.HEADING_LABEL),
@@ -130,7 +127,6 @@ module.exports = {
             _haltGpxReplay    = false;
 
         function updateGeo() {
-            console.log('REINSTATE ONCE WE HAVE #' + GEO_OPTIONS.CELL_ID + ' ELEMENT');
             geo.updatePositionInfo({
                     latitude: parseFloat(latitude.value),
                     longitude: parseFloat(longitude.value),
@@ -139,7 +135,6 @@ module.exports = {
                     altitudeAccuracy: parseInt(altitudeAccuracy.value, 10),
                     heading: heading.value ? parseFloat(heading.value) : 0, // HACK: see techdebt http://www.pivotaltracker.com/story/show/5478847
                     speed: speed.value ? parseInt(speed.value, 10) : 0, // HACK: see techdebt http://www.pivotaltracker.com/story/show/5478847
-                    //cellID: cellID.value,
                     timeStamp: new Date()
                 },
                 delay.value,
@@ -150,7 +145,7 @@ module.exports = {
             var headingDeg  = parseFloat(heading.value),
                 headingText = _getTextHeading(parseFloat(heading.value));
 
-            headingLabel.innerHTML = headingText;
+            headingLabel.textContent = headingText;
             headingMapLabel.innerHTML = headingText + '</br>' + headingDeg + '&deg;';
             mapMarker.setAttribute('style', '-webkit-transform: rotate(' + headingDeg + 'deg);');
         }
@@ -161,6 +156,8 @@ module.exports = {
                 new OpenLayers.Projection('EPSG:4326'));
             longitude.value = center.lon;
             latitude.value = center.lat;
+
+            _gpsMapZoomSet(geo.map.zoom);
             updateGeo();
         }
 
@@ -171,9 +168,7 @@ module.exports = {
             accuracy.value = positionInfo.accuracy;
             altitudeAccuracy.value = positionInfo.altitudeAccuracy;
 
-            console.log('REINSTATE ONCE WE HAVE #' + GEO_OPTIONS.CELL_ID + ' ELEMENT');
-            //cellID.value = positionInfo.cellID;
-            delay.value = document.getElementById(GEO_OPTIONS.DELAY_LABEL).innerHTML = geo.delay || 0;
+            delay.value = document.getElementById(GEO_OPTIONS.DELAY_LABEL).textContent = geo.delay || 0;
             if (geo.timeout) {
                 timeout.checked = true;
             }
@@ -302,8 +297,8 @@ module.exports = {
 
                         track.push({
                             coords: {
-                                latitude: att['lat'].value,
-                                longitude: att['lon'].value,
+                                latitude: att.lat.value,
+                                longitude: att.lon.value,
                                 altitude: _ele ? _ele.innerHTML : 0,
                                 accuracy: 150,
                                 altitudeAccuracy: 80,
@@ -400,42 +395,37 @@ module.exports = {
             }
         }
 
-        // HACK: see techdebt http://www.pivotaltracker.com/story/show/5478847 (double HACK!!!)
-        console.log('REINSTATE ONCE WE HAVE #geo-cellid-container ELEMENT');
-        //document.querySelector('#geo-cellid-container').style.display = 'none';
-        console.log('REINSTATE ONCE WE HAVE #geo-heading-container ELEMENT');
-        //document.querySelector('#geo-heading-container').style.display = 'initial';
-        console.log('REINSTATE ONCE WE HAVE #geo-speed-container ELEMENT');
-        //document.querySelector('#geo-speed-container').style.display = 'none';
-
         _gpsMapZoomLevel = db.retrieve(constants.GEO.MAP_ZOOM_KEY) || 14;
 
-        console.log('REINSTATE ONCE WE HAVE #geo-map-zoom-decrease and #geo-map-zoom-increase ELEMENTS');
-        /*document.querySelector('#geo-map-zoom-decrease').addEventListener('onclick', function () {
+        document.querySelector('#geo-map-zoom-decrease').addEventListener('click', function () {
             _updateGpsMapZoom(false);
         });
-        document.querySelector('#geo-map-zoom-increase').addEventListener('onclick', function () {
-            _updateGpsMapZoom(false);
-        });*/
+        document.querySelector('#geo-map-zoom-increase').addEventListener('click', function () {
+            _updateGpsMapZoom(true);
+        });
 
         utils.bindAutoSaveEvent('#' + GEO_OPTIONS.LATITUDE, updateGeo);
         utils.bindAutoSaveEvent('#' + GEO_OPTIONS.LONGITUDE, updateGeo);
         utils.bindAutoSaveEvent('#' + GEO_OPTIONS.ALTITUDE, updateGeo);
         utils.bindAutoSaveEvent('#' + GEO_OPTIONS.ACCURACY, updateGeo);
         utils.bindAutoSaveEvent('#' + GEO_OPTIONS.ALTITUDE_ACCURACY, updateGeo);
-        utils.bindAutoSaveEvent('#' + GEO_OPTIONS.CELL_ID, updateGeo);
 
-        document.querySelector('#' + GEO_OPTIONS.DELAY).addEventListener('onchange', function () {
+        document.querySelector('#' + GEO_OPTIONS.DELAY).addEventListener('change', function () {
             updateGeo();
-            delayLabel.innerHTML = delay.value;
+            delayLabel.textContent = delay.value;
         });
 
-        document.querySelector('#' + GEO_OPTIONS.TIMEOUT).addEventListener('onclick', function () {
+        document.querySelector('#' + GEO_OPTIONS.DELAY).addEventListener('input', function () {
+            updateGeo();
+            delayLabel.textContent = delay.value;
+        });
+
+        document.querySelector('#' + GEO_OPTIONS.TIMEOUT).addEventListener('click', function () {
             updateGeo();
         });
 
         console.log('REINSTATE ONCE WE HAVE #' + GEO_OPTIONS.GPXFILE + ' ELEMENT');
-        /*document.querySelector('#' + GEO_OPTIONS.GPXFILE).addEventListener('onchange', function () {
+        /*document.querySelector('#' + GEO_OPTIONS.GPXFILE).addEventListener('change', function () {
             // It is possible to have no file selected and still get a change event.
             // You do this by selecting something, then selecting nothing.
             // You select nothing by cancelling out of the file picker dialog.
@@ -444,11 +434,16 @@ module.exports = {
         });*/
 
         console.log('REINSTATE ONCE WE HAVE #' + GEO_OPTIONS.GPXGO + ' ELEMENT');
-        /*document.querySelector('#' + GEO_OPTIONS.GPXGO).addEventListener('onclick', function () {
+        /*document.querySelector('#' + GEO_OPTIONS.GPXGO).addEventListener('click', function () {
             replayGpxTrack();
         });*/
 
-        document.querySelector('#' + GEO_OPTIONS.HEADING).addEventListener('onchange', function () {
+        document.querySelector('#' + GEO_OPTIONS.HEADING).addEventListener('change', function () {
+            updateGeo();
+            updateHeadingValues();
+        });
+
+        document.querySelector('#' + GEO_OPTIONS.HEADING).addEventListener('input', function () {
             updateGeo();
             updateHeadingValues();
         });
@@ -468,7 +463,6 @@ module.exports = {
         _triggerEvent();
 
         function _triggerEvent() {
-            console.log('REINSTATE ONCE WE HAVE #' + GEO_OPTIONS.CELL_ID + ' ELEMENT');
             event.trigger(positionEvent, [{
                 latitude: latitude.value,
                 longitude: longitude.value,
@@ -478,7 +472,6 @@ module.exports = {
                 heading: heading ? heading.value : 0, // HACK: see techdebt http://www.pivotaltracker.com/story/show/5478847
                 speed: speed ? speed.value : 0, // HACK: see techdebt http://www.pivotaltracker.com/story/show/5478847
 
-                //cellID: cellID.value,
                 timeStamp: new Date()
             }]);
         }

@@ -9,47 +9,39 @@
     <script src="simulate.js"></script>
 
     <template id="cordova-panel-template">
-        <section class="cordova-panel cordova-corner cordova-panel-open">
-            <section class="h2 cordova-header cordova-collapse-handle"></section>
-            <section class="cordova-info cordova-widget-content">
-                <content></content>
-            </section>
-        </section>
-    </template>
-
-    <template id="cordova-dialog-template">
-        <section class="cordova-panel cordova-corner cordova-panel-open">
-            <section class="h2 cordova-header cordova-collapse-handle"></section>
-            <section class="cordova-info cordova-widget-content">
-                <content></content>
-            </section>
-        </section>
-    </template>
-
-    <template id="cordova-panel-row-template">
-        <section class="cordova-panel-row">
-            <content></content>
-        </section>
-    </template>
-
-    <template id="cordova-group-template">
+        <section class="cordova-header cordova-collapse-handle"></section>
         <section>
             <content></content>
         </section>
     </template>
 
-    <template id="cordova-radio-template">
-        <section class="cordova-radio-wrapper">
-            <input id="cordova-radio-template-input" type="radio">
-            <label for="cordova-radio-template-input" class="cordova-radio-label"></label>
+    <template id="cordova-dialog-template">
+        <section class="cordova-header cordova-collapse-handle"></section>
+        <section>
+            <content></content>
         </section>
     </template>
 
+    <template id="cordova-panel-row-template">
+        <content></content>
+    </template>
+
+    <template id="cordova-group-template">
+        <content></content>
+    </template>
+
+    <template id="cordova-radio-template">
+        <input id="cordova-radio-template-input" type="radio">
+        <label for="cordova-radio-template-input" class="cordova-radio-label">
+            <content></content>
+        </label>
+    </template>
+
     <template id="cordova-checkbox-template">
-        <section class="cordova-panel-row">
-            <label for="cordova-checkbox-template-input"></label>
-            <input id="cordova-checkbox-template-input" type="checkbox">
-        </section>
+        <label for="cordova-checkbox-template-input">
+            <content></content>
+        </label>
+        <input id="cordova-checkbox-template-input" type="checkbox">
     </template>
 
     <template id="cordova-label-template">
@@ -57,15 +49,14 @@
     </template>
 
     <template id="cordova-text-entry-template">
-        <section class="cordova-panel-row">
-            <label for="cordova-text-entry-template-input"></label>
-            <input id="cordova-text-entry-template-input" class="cordova-state-default" type="text">
-        </section>
+        <label for="cordova-text-entry-template-input"></label>
+        <input id="cordova-text-entry-template-input" class="cordova-widget cordova-state-default" type="text">
     </template>
 
     <template id="cordova-button-template">
-        <button class="cordova-button cordova-widget cordova-state-default cordova-button-text-only">
-            <span class="cordova-button-text"></span></button>
+        <button class="cordova-widget cordova-state-default">
+            <span><content></content></span>
+        </button>
     </template>
 
     <template id="cordova-file-template">
@@ -73,24 +64,12 @@
     </template>
 
     <template id="cordova-combo-template">
-        <section class="cordova-panel-row">
-            <label for="cordova-combo-template-select"></label>
-            <select id="cordova-combo-template-select"
-                    class="cordova-state-default cordova-select"></select>
-        </section>
+        <label for="cordova-combo-template-select"></label>
+        <select id="cordova-combo-template-select" class="cordova-widget cordova-state-default"></select>
     </template>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            console.log('*** MAIN DOCUMENT DOMContentLoaded ***');
-        })
-    </script>
 </head>
-<body onload="console.log('*** body.onload ***')">
-<section id="left-panel" class="cordova-left cordova-main"></section>
-<section id="popup-window" class="cordova-overlay cordova-main" style="display: none;">
-    <section id="dialog-wrapper" class="cordova-dialog"></section>
-</section>
-<section id="no-plugins-text" class="cordova-no-plugins cordova-main" style="display: none;"><p
-        class="cordova-no-plugins-text">NO SUPPORTED PLUGINS FOUND</p></section>
+<body>
+<section id="left-panel" class="cordova-main"></section>
+<section id="popup-window" class="cordova-overlay" style="display: none;"></section>
 </body>
 </html>

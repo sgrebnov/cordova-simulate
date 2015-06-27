@@ -345,11 +345,12 @@ self = module.exports = {
         var node = document.querySelector(selector);
 
         if (!node) {
-            console.log('REINSTATE ONCE WE HAVE ' + selector + ' ELEMENT');
+            console.log('AUTO SAVE: REINSTATE ONCE WE HAVE ' + selector + ' ELEMENT');
             return;
         }
 
-        node.addEventListener('onkeyup', function (event) {
+        node.addEventListener('keyup', function (event) {
+            console.log('keyup');
             if (event.keyCode !== 9) {
                 clearTimeout(oldSetTimeoutId);
                 oldSetTimeoutId = window.setTimeout(function () {

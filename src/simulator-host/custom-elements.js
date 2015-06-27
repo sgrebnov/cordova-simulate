@@ -1,29 +1,45 @@
 function initialize() {
-    registerCustomElement('cordova-panel', null, function () {
-        this.shadowRoot.querySelector('section section').textContent = this.getAttribute('caption');
+    registerCustomElement('cordova-panel', function () {
+        this.shadowRoot.querySelector('section').textContent = this.getAttribute('caption');
     });
 
-    registerCustomElement('cordova-dialog', null, function () {
-        this.shadowRoot.querySelector('section section').textContent = this.getAttribute('caption');
+    registerCustomElement('cordova-dialog', function () {
+        this.shadowRoot.querySelector('section').textContent = this.getAttribute('caption');
     });
 
-    registerCustomElement('cordova-panel-row');
+    registerCustomElement('cordova-panel-row', function () {
+        this.classList.add('cordova-panel-row');
+        this.classList.add('cordova-group');
+    });
 
-    registerCustomElement('cordova-group');
+    registerCustomElement('cordova-group', function () {
+        this.classList.add('cordova-group');
+    });
 
-    registerCustomElement('cordova-checkbox', null, function () {
-        this.shadowRoot.querySelector('label').textContent = this.getAttribute('label');
+    registerCustomElement('cordova-checkbox', {
+        checked: {
+            get: function () {
+                return this.shadowRoot.getElementById('cordova-checkbox-template-input').checked;
+            },
+            set: function (value) {
+                this.shadowRoot.getElementById('cordova-checkbox-template-input').checked = value;
+            }
+        }
+    }, function () {
+        this.classList.add('cordova-panel-row');
+        this.classList.add('cordova-group');
     });
 
     registerCustomElement('cordova-radio', {
         checked: {
             get: function () {
                 return this.shadowRoot.getElementById('cordova-radio-template-input').checked;
+            },
+            set: function (value) {
+                this.shadowRoot.getElementById('cordova-radio-template-input').checked = value;
             }
         }
     }, function () {
-        this.shadowRoot.querySelector('label').textContent = this.getAttribute('caption');
-
         var isChecked = this.getAttribute('checked');
         if (isChecked && isChecked.toLowerCase() === 'true') {
             this.shadowRoot.querySelector('input').checked = true;
@@ -36,7 +52,16 @@ function initialize() {
         }
     });
 
-    registerCustomElement('cordova-label', null, function () {
+    registerCustomElement('cordova-label', {
+        textContent: {
+            set: function (value) {
+                this.shadowRoot.querySelector('label').textContent = value;
+            },
+            get: function () {
+                return this.shadowRoot.querySelector('label').textContent;
+            }
+        }
+    }, function () {
         this.shadowRoot.querySelector('label').textContent = this.getAttribute('label');
     });
 
@@ -52,11 +77,11 @@ function initialize() {
         }
     }, function () {
         this.shadowRoot.querySelector('label').textContent = this.getAttribute('label');
-    });
+        this.classList.add('cordova-panel-row');
+        this.classList.add('cordova-group');
+    }, 'input');
 
-    registerCustomElement('cordova-button', null, function () {
-        this.shadowRoot.querySelector('span').textContent = this.getAttribute('caption');
-    }, 'button');
+    registerCustomElement('cordova-button', 'button');
 
     registerCustomElement('cordova-file', {
         input: {
@@ -88,6 +113,8 @@ function initialize() {
             }
         }
     }, function () {
+        this.classList.add('cordova-panel-row');
+        this.classList.add('cordova-group');
         var label = this.getAttribute('label');
         if (label) {
             this.shadowRoot.querySelector('label').textContent = this.getAttribute('label');
@@ -97,11 +124,17 @@ function initialize() {
     }, 'select');
 }
 
-function registerCustomElement(name, protoProperties, initializeCallback, eventTargetSelector) {
-    if (typeof initializeCallback !== 'function') {
-        eventTargetSelector = initializeCallback;
-        initializeCallback = null;
+function registerCustomElement(name) {
+    var args = arguments;
+    function findArg(argType) {
+        return Array.prototype.find.call(args, function (arg, index) {
+            return index > 0 && (typeof arg === argType);
+        });
     }
+
+    var protoProperties = findArg('object');
+    var initializeCallback = findArg('function');
+    var eventTargetSelector = findArg('string');
 
     var constructorName = name.split('-').map(function (bit) {
         return bit.charAt(0).toUpperCase() + bit.substr(1);
@@ -116,6 +149,15 @@ function registerCustomElement(name, protoProperties, initializeCallback, eventT
         this.initialized = true;
 
         var eventTarget = eventTargetSelector && this.shadowRoot.querySelector(eventTargetSelector);
+        if (eventTarget) {
+            // Make sure added events are redirected
+            Object.defineProperty(this, 'addEventListener', {
+                value: function (arg1, arg2, arg3) {
+                    eventTarget.addEventListener(arg1, arg2, arg3);
+                }
+            });
+        }
+
         var atts = this.attributes;
         Array.prototype.forEach.call(atts, function (att) {
             if (att.name.indexOf('on') === 0) {
@@ -200,3 +242,26 @@ function findParent(element, tag) {
 module.exports = {
     initialize: initialize
 };
+
+if (!Array.prototype.find) {
+    Array.prototype.find = function(predicate) {
+        if (this == null) {
+            throw new TypeError('Array.prototype.find called on null or undefined');
+        }
+        if (typeof predicate !== 'function') {
+            throw new TypeError('predicate must be a function');
+        }
+        var list = Object(this);
+        var length = list.length >>> 0;
+        var thisArg = arguments[1];
+        var value;
+
+        for (var i = 0; i < length; i++) {
+            value = list[i];
+            if (predicate.call(thisArg, value, i, list)) {
+                return value;
+            }
+        }
+        return undefined;
+    };
+}

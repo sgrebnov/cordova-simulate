@@ -20,16 +20,16 @@ h1 {
     font-weight: bold;
 }
 
-body /deep/ cordova-panel {
+cordova-panel {
     margin: 10px 0 0 10px;
     width: 320px;
 }
 
-body /deep/ .cordova-dialog {
+cordova-dialog {
     width: 377px;
 }
 
-body /deep/ .cordova-panel {
+cordova-panel, cordova-dialog {
     z-index: 50;
     position: relative;
     -webkit-column-break-inside:avoid;
@@ -38,27 +38,6 @@ body /deep/ .cordova-panel {
     border-radius: 2px;
     box-shadow: 2px 2px 5px 1px rgba(0, 0, 0, 0.2);
     background: #fff;
-}
-
-body /deep/ .cordova-state-default {
-    border: 1px solid #d3d3d3;
-    background: #e6e6e6;
-    font-weight: normal;
-    color: #555;
-}
-
-/*body /deep/ .cordova-panel-open {
-    background-image: none !important;
-    padding: 0 2px 2px 2px;
-}*/
-
-body /deep/ section {
-    display: block;
-    font-family: 'Helvetica Neue', 'Roboto', 'Segoe UI', sans-serif;
-}
-
-body /deep/ .cordova-main {
-    /*font-size: 12px !important;*/
 }
 
 body /deep/ .cordova-header {
@@ -70,7 +49,6 @@ body /deep/ .cordova-header {
     background-color: #03a9f4;
     color: #fff;
     font-size: 16px;
-    font-family: 'Helvetica Neue', 'Roboto', 'Segoe UI', sans-serif;
     height: 24px;
     line-height: 24px;
 }
@@ -79,34 +57,19 @@ body /deep/ .cordova-collapse-handle {
     padding: 5px 9px;
 }
 
-/*body /deep/ .cordova-widget-content {
-    color: #222;
-    border: 1px solid #222;
-    background: #fff;
-}*/
-
 body /deep/ .cordova-widget {
     font-family: 'Helvetica Neue', 'Roboto', 'Segoe UI', sans-serif;
     font-size: 14px;
 }
 
-body /deep/ .cordova-info {
-    /*padding: 12px;*/
-    margin: 0;
-    word-wrap: break-word;
-    height: 100%;
-}
-
-body /deep/ cordova-panel > *::shadow > * {
+body /deep/ cordova-panel > *::shadow > .cordova-group,
+body /deep/ cordova-dialog > *::shadow > .cordova-group,
+body /deep/ cordova-panel > .cordova-group,
+body /deep/ cordova-dialog > .cordova-group {
     margin: 12px;
 }
 
-
-body /deep/ cordova-panel > section {
-    margin: 12px;
-}
-
-body /deep/ .cordova-left {
+.cordova-main {
     position: absolute;
     top: 0;
     left: 0;
@@ -131,7 +94,6 @@ body /deep/ .cordova-left {
 }
 
 body /deep/ label {
-    /*font-weight: bold;*/
     color: #3c8b9e;
     font-size: 14px;
 }
@@ -179,41 +141,26 @@ body /deep/ .cordova-no-plugins {
     align-items: center;
 }
 
-body /deep/ .cordova-no-plugins-text {
-    background-color: rgba(128, 128, 128, 0.85);
-    border-radius: 4px;
-    padding: 2px 10px;
-    color: white;
-    font-size: 15pt;
-}
-
-body /deep/ .cordova-select {
+cordova-combo /deep/ select {
     min-width: 112px;
 }
 
-body /deep/ .cordova-button {
+cordova-button {
     min-width: 112px;
     display: inline-block;
     position: relative;
-    padding: 0;
-    margin: 0 0;
-    text-decoration: none !important;
     cursor: pointer;
     text-align: center;
     zoom: 1;
     overflow: visible;
 }
 
-body /deep/ .cordova-button-text-only .cordova-button-text {
+cordova-button /deep/ button {
+    width: 100%;
     padding: .4em 1em;
 }
 
-body /deep/ .cordova-button .cordova-button-text {
-    display: block;
-    line-height: 1.4;
-}
-
-select {
+body /deep/ select {
     cursor: pointer;
 }
 
@@ -252,6 +199,13 @@ body /deep/ input[type^=number]:hover {
     color: #212121;
 }
 
+body /deep/ .cordova-state-default {
+    border: 1px solid #d3d3d3;
+    background: #e6e6e6;
+    font-weight: normal;
+    color: #555;
+}
+
 body /deep/ input:focus,
 body /deep/ textarea:focus,
 body /deep/ isindex:focus,
@@ -260,7 +214,7 @@ body /deep/ select:focus {
     outline: none;
 }
 
-body /deep/ .cordova-radio-wrapper {
+body /deep/ cordova-radio {
     display: flex;
     align-items: center;
 }
@@ -269,6 +223,10 @@ body /deep/ .cordova-panel-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+body /deep/ cordova-group {
+    display: block;
 }
 
 body /deep/ .cordova-radio-wrapper.cordova-inline {

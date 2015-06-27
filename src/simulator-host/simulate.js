@@ -19,7 +19,7 @@ function initializePlugins() {
     // Find the html import elements on the page
     var htmlImports = document.querySelectorAll('link[rel="import"]');
     var panelContainer = document.getElementById('left-panel');
-    var dialogContainer = document.getElementById('dialog-wrapper');
+    var dialogContainer = document.getElementById('popup-window');
 
     Array.prototype.forEach.call(htmlImports, function (htmlImport) {
         var href = htmlImport.href.split('/');
