@@ -254,7 +254,11 @@ function streamFile(filePath, request, response) {
             return '<script src="' + scriptSource + '"></script>';
         }).join('');
 
-        server.sendStream(filePath, request, response, fs.createReadStream(filePath).pipe(replaceStream(/<\s*head\s*>/, '<head>' + scriptTags)), true);
+        // Note we replace "default-src 'self'" with "default-src 'self' ws:" (in Content Security Policy) so that
+        // websocket connections are allowed.
+        server.sendStream(filePath, request, response, fs.createReadStream(filePath)
+            .pipe(replaceStream(/<\s*head\s*>/, '<head>' + scriptTags))
+            .pipe(replaceStream('default-src \'self\'', 'default-src \'self\' ws:')), true);
         return true;
     }
     if (request.url === '/simulator/app-host/app-host.js') {
