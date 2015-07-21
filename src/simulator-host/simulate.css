@@ -20,6 +20,14 @@ h1 {
     font-weight: bold;
 }
 
+a {
+    text-decoration: underline;
+    outline: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: rgb(128,128,128);
+}
+
 cordova-panel {
     margin: 10px 0 0 10px;
     width: 320px;
@@ -149,7 +157,6 @@ cordova-button {
     min-width: 112px;
     display: inline-block;
     position: relative;
-    cursor: pointer;
     text-align: center;
     zoom: 1;
     overflow: visible;
@@ -158,6 +165,7 @@ cordova-button {
 cordova-button /deep/ button {
     width: 100%;
     padding: .4em 1em;
+    cursor: pointer;
 }
 
 body /deep/ select {

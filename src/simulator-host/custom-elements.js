@@ -107,6 +107,11 @@ function initialize() {
                 return this.shadowRoot.querySelector('select').selectedIndex;
             }
         },
+        value: {
+            get: function () {
+                return this.shadowRoot.querySelector('select').value;
+            }
+        },
         appendChild: {
             value: function (node) {
                 this.shadowRoot.querySelector('select').appendChild(node);
@@ -115,12 +120,19 @@ function initialize() {
     }, function () {
         this.classList.add('cordova-panel-row');
         this.classList.add('cordova-group');
+        var select = this.shadowRoot.querySelector('select')
         var label = this.getAttribute('label');
         if (label) {
             this.shadowRoot.querySelector('label').textContent = this.getAttribute('label');
         } else {
-            this.shadowRoot.querySelector('select').style.width = '100%';
+            select.style.width = this.style.width || '100%';
+            select.style.minWidth = this.style.minWidth;
         }
+        // Move option elements to be children of select element
+        var options = this.querySelectorAll('option');
+        Array.prototype.forEach.call(options, function (option) {
+            select.appendChild(option);
+        });
     }, 'select');
 }
 

@@ -118,7 +118,7 @@ module.exports = {
             timeout           = document.getElementById(GEO_OPTIONS.TIMEOUT),
             gpxMultiplier     = document.getElementById(GEO_OPTIONS.GPXMULTIPLIER),
             gpxReplayStatus   = document.getElementById(GEO_OPTIONS.GPXREPLAYSTATUS),
-            gpxGo             = null, // document.getElementById(GEO_OPTIONS.GPXGO).querySelector('span'),
+            gpxGo             = document.getElementById(GEO_OPTIONS.GPXGO),
             mapMarker         = document.getElementById(GEO_OPTIONS.MAP_MARKER),
             mapContainer      = document.getElementById(GEO_OPTIONS.MAP_CONTAINER),
             map               = null,
@@ -238,8 +238,11 @@ module.exports = {
                 navUtils      = new utils.navHelper();
 
             reader.onload = function (e) {
-                _xml = e.target.result;
-                t = $(_xml).find('trkpt');
+                function parseXml(xml) {
+                    return new DOMParser().parseFromString(xml, "text/xml");
+                }
+
+                t = parseXml(e.target.result).querySelectorAll('trkpt');
 
                 track = [];
 
@@ -247,9 +250,9 @@ module.exports = {
                     if (!isNaN(i)) {
                         att = t[i].attributes;
                         lastAtt = t[i - 1] ? t[i - 1].attributes : {};
-                        _ele = $(t[i]).find('ele')[0];
-                        _timestamp = $(t[i]).find('time')[0];
-                        _lastTimestamp = $(t[i - 1]).find('time')[0];
+                        _ele = parseXml(t[i]).querySelectorAll('ele')[0];
+                        _timestamp = parseXml(t[i]).querySelectorAll('time')[0];
+                        _lastTimestamp = parseXml(t[i - 1]).querySelectorAll('time')[0];
 
                         if (_timestamp) {
                             //files recorded with endomondo and others have timestamps, this is not a route plan but a record of a track
@@ -319,12 +322,12 @@ module.exports = {
         function replayGpxTrack() {
             if (_replayingGpxFile) {
                 _haltGpxReplay = true;
-                gpxGo.innerHTML = constants.GEO.GPXGO_LABELS.GO;
+                gpxGo.textContent = constants.GEO.GPXGO_LABELS.GO;
             }
             else {
                 if (track.length > 0) {
                     _haltGpxReplay = false;
-                    gpxGo.innerHTML = constants.GEO.GPXGO_LABELS.STOP;
+                    gpxGo.textContent = constants.GEO.GPXGO_LABELS.STOP;
 
                     latitude.value = track[0].coords.latitude;
                     longitude.value = track[0].coords.longitude;
@@ -387,7 +390,7 @@ module.exports = {
                         }
                         else {
                             _replayingGpxFile = false;
-                            gpxGo.innerHTML = constants.GEO.GPXGO_LABELS.GO;
+                            gpxGo.textContent = constants.GEO.GPXGO_LABELS.GO;
                             console.log('Ripple :: Finished replaying GPX file (Arriving at our destination, assuming standard orbit Captain.)');
                         }
                     }
@@ -424,19 +427,17 @@ module.exports = {
             updateGeo();
         });
 
-        console.log('REINSTATE ONCE WE HAVE #' + GEO_OPTIONS.GPXFILE + ' ELEMENT');
-        /*document.querySelector('#' + GEO_OPTIONS.GPXFILE).addEventListener('change', function () {
+        document.querySelector('#' + GEO_OPTIONS.GPXFILE).addEventListener('change', function () {
             // It is possible to have no file selected and still get a change event.
             // You do this by selecting something, then selecting nothing.
             // You select nothing by cancelling out of the file picker dialog.
-            var selectedFiles = a.target.files;
+            var selectedFiles = this.files;
             if (selectedFiles.length > 0) loadGpxFile(selectedFiles[0]);
-        });*/
+        });
 
-        console.log('REINSTATE ONCE WE HAVE #' + GEO_OPTIONS.GPXGO + ' ELEMENT');
-        /*document.querySelector('#' + GEO_OPTIONS.GPXGO).addEventListener('click', function () {
+        document.querySelector('#' + GEO_OPTIONS.GPXGO).addEventListener('click', function () {
             replayGpxTrack();
-        });*/
+        });
 
         document.querySelector('#' + GEO_OPTIONS.HEADING).addEventListener('change', function () {
             updateGeo();
