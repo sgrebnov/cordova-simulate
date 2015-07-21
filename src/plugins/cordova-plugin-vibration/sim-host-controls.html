@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="sim-host-controls.js"></script>
+</head>
+<body>
+<!-- Panels -->
+<cordova-panel id="vibration" caption="Vibration">
+    <cordova-text-entry label="Time" id="time-to-vibrate"></cordova-text-entry>
+    <cordova-panel-row>
+        <cordova-button onclick="vibrate()">Vibrate</cordova-button>
+        <cordova-button onclick="cancelVibration()">Cancel vibration</cordova-button>
+    </cordova-panel-row>
+</cordova-panel>
+</body>
+</html>

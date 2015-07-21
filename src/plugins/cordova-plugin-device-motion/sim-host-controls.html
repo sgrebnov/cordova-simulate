@@ -1,0 +1,62 @@
+<!--
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ *
+-->
+
+<!-- Panels -->
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="sim-host-controls.js"></script>
+</head>
+<body>
+<cordova-panel id="device-motion" caption="Accelerometer">
+    <style>
+        #accel-x-label, #accel-y-label, #accel-z-label {
+            margin-right: 5px;
+            margin-left: auto;
+        }
+    </style>
+
+    <cordova-combo id="accel-device-orientations" label="Orientation:"></cordova-combo>
+    
+    <cordova-panel-row>
+        <cordova-label label="X"></cordova-label>
+        <cordova-label label="0" id="accel-x-label"></cordova-label>
+        <input id="accel-x" type="range" value="0" min="-1000" max="1000" style="width:112px;">
+    </cordova-panel-row>
+
+    <cordova-panel-row>
+        <cordova-label label="Y"></cordova-label>
+        <cordova-label label="0" id="accel-y-label"></cordova-label>
+        <input id="accel-y" type="range" value="0" min="-1000" max="1000" style="width:112px;">
+    </cordova-panel-row>
+
+    <cordova-panel-row>
+        <cordova-label label="Z"></cordova-label>
+        <cordova-label label="0" id="accel-z-label"></cordova-label>
+        <input id="accel-z" type="range" value="0" min="-1000" max="1000" style="width:112px;">
+    </cordova-panel-row>
+
+    <cordova-combo id="accel-recorded-data" label="Recorded Data"><option>Shake</option></cordova-combo>
+    <cordova-panel-row><cordova-button id="accel-play-recorded">Play</cordova-button></cordova-panel-row>
+
+</cordova-panel>
+</body>
+</html>
