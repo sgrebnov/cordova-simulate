@@ -108,12 +108,15 @@ Messages.prototype = {
     }
 };
 
-function registerPluginHandlers(handlers) {
-    for (var handlerId in handlers) {
-        if (handlers.hasOwnProperty(handlerId)) {
-            pluginHandlers[handlerId] = handlers[handlerId];
+function clobber(clobbers, scope) {
+    Object.keys(clobbers).forEach(function (key) {
+        if (clobbers[key] && typeof clobbers[key] === 'object') {
+            scope[key] =  scope[key] || {};
+            clobber(clobbers[key], scope[key]);
+        } else {
+            scope[key] = clobbers[key];
         }
-    }
+    });
 }
 
 // Details of each plugin that has app-host code is injected when this file is served.
@@ -121,14 +124,29 @@ var plugins = {
     /** PLUGINS **/
 };
 
-Object.keys(plugins).forEach(function (pluginId) {
-    var pluginInfo = plugins[pluginId];
-    if (typeof pluginInfo === 'function') {
-        pluginInfo = pluginInfo(new Messages(pluginId));
-        plugins[pluginId] = pluginInfo;
-    }
+var pluginHandlersDefinitions = {
+    /** PLUGIN-HANDLERS **/
+};
 
-    if (pluginInfo && pluginInfo.pluginHandlers) {
-        registerPluginHandlers(pluginInfo.pluginHandlers);
-    }
-});
+var pluginClobberDefinitions = {
+    /** PLUGIN-CLOBBERS **/
+};
+
+applyPlugins(plugins);
+applyPlugins(pluginHandlersDefinitions, pluginHandlers);
+applyPlugins(pluginClobberDefinitions, window);
+
+function applyPlugins(plugins, clobberScope) {
+    Object.keys(plugins).forEach(function (pluginId) {
+        var plugin = plugins[pluginId];
+        if (plugin) {
+            if (typeof plugin === 'function') {
+                plugin = plugin(new Messages(pluginId));
+                plugins[pluginId] = plugin;
+            }
+            if (clobberScope) {
+                clobber(plugin, clobberScope);
+            }
+        }
+    });
+}
