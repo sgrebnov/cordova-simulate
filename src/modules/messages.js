@@ -1,33 +1,37 @@
-var Socket = require('./socket');
-
-function Messages(pluginId) {
+function Messages(pluginId, socket) {
     this.pluginId = pluginId;
+    this.socket = socket;
     this.events = {};
 
     var that = this;
-    Socket.socket.on('plugin-message', function (data, callback) {
-        if (data.pluginId !== pluginId || !that.events) {
-            return;
+    socket.on('plugin-message', function (data, callback) {
+        if (data.pluginId === pluginId) {
+            notify.call(that, data.message, data.data, callback);
         }
-
-        var handlers = that.events[data.message];
-        if (!handlers) {
-            return;
-        }
-
-        handlers.forEach(function (handler) {
-            handler.call(that, data.message, data.data, callback);
-        });
     });
+}
+
+function notify(message, data, callback) {
+    // Notifies local listeners of a message
+    var handlers = this.events && this.events[message];
+    if (handlers) {
+        handlers.forEach(function (handler) {
+            handler.call(this, message, data, callback);
+        });
+    }
 }
 
 Messages.prototype = {
     emit: function (message, data, callback) {
-        Socket.socket.emit('plugin-message', {
+        // Pass the message across the socket
+        this.socket.emit('plugin-message', {
             pluginId: this.pluginId,
             message: message,
             data: data
         }, callback);
+
+        // Notify any local listeners
+        notify.call(this, message, data, callback);
     },
 
     on: function (message, handler) {

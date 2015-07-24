@@ -18,84 +18,87 @@
  * under the License.
  *
  */
-var geo = require('./geo'),
-    Position = require('./Position'),
-    PositionError = require('./PositionError'),
-    _watches = {},
-    _self;
 
-function createPosition() {
-    var position = new Position(),
-        positionInfo = geo.getPositionInfo();
+module.exports = function (messages) {
+    var geo = require('./geo-model')(messages),
+        Position = require('./Position'),
+        PositionError = require('./PositionError'),
+        _watches = {},
+        _self;
 
-    position.coords.latitude = positionInfo.latitude;
-    position.coords.longitude = positionInfo.longitude;
-    position.coords.altitude = positionInfo.altitude;
-    position.coords.altitudeAccuracy = positionInfo.altitudeAccuracy;
-    position.coords.accuracy = positionInfo.accuracy;
-    position.coords.heading = positionInfo.heading;
-    position.coords.speed = positionInfo.speed;
-    position.timestamp = positionInfo.timeStamp.getTime();
+    function createPosition() {
+        var position = new Position(),
+            positionInfo = geo.getPositionInfo();
 
-    return position;
-}
+        position.coords.latitude = positionInfo.latitude;
+        position.coords.longitude = positionInfo.longitude;
+        position.coords.altitude = positionInfo.altitude;
+        position.coords.altitudeAccuracy = positionInfo.altitudeAccuracy;
+        position.coords.accuracy = positionInfo.accuracy;
+        position.coords.heading = positionInfo.heading;
+        position.coords.speed = positionInfo.speed;
+        position.timestamp = positionInfo.timeStamp.getTime();
 
-_self = {
-    navigator: {
-        geolocation: {
-            getCurrentPosition: function (onSuccess, onError) {
-                var delay = ((geo.delay || 0) * 1000) || 1,
-                    timeout = geo.timeout;
+        return position;
+    }
 
-                window.setTimeout(function () {
-                    if (timeout) {
-                        var error = new PositionError();
-                        error.code = PositionError.TIMEOUT;
-                        error.message = "position timed out";
+    _self = {
+        navigator: {
+            geolocation: {
+                getCurrentPosition: function (onSuccess, onError) {
+                    var delay = ((geo.delay || 0) * 1000) || 1,
+                        timeout = geo.timeout;
 
-                        onError(error);
+                    window.setTimeout(function () {
+                        if (timeout) {
+                            var error = new PositionError();
+                            error.code = PositionError.TIMEOUT;
+                            error.message = "position timed out";
+
+                            onError(error);
+                        }
+                        else {
+                            // TODO: build facility to trigger onError() from emulator
+                            // see pivotal item: https://www.pivotaltracker.com/story/show/7040343
+                            _self.lastPosition = createPosition();
+                            onSuccess(_self.lastPosition);
+                        }
+                    }, delay);
+                },
+
+                watchPosition: function (geolocationSuccess, geolocationError, geolocationOptions) {
+                    if (!geolocationOptions) { geolocationOptions = {}; }
+
+                    var watchId = (new Date()).getTime().toString(),
+                        watchObj = {},
+                        timeout = geolocationOptions.timeout || 10000;
+
+                    watchObj = {
+                        onSuccess: geolocationSuccess,
+                        onError: geolocationError,
+                        interval: timeout
+                    };
+
+                    _watches[watchId] = watchObj;
+
+                    _watches[watchId].intervalId = window.setInterval(function () {
+                        _self.getCurrentPosition(_watches[watchId].onSuccess, _watches[watchId].onError);
+                    }, timeout);
+
+                    return watchId;
+                },
+
+                lastPosition: null,
+
+                clearWatch: function (watchId) {
+                    if (_watches[watchId]) {
+                        window.clearInterval(_watches[watchId].intervalId);
+                        delete _watches[watchId];
                     }
-                    else {
-                        // TODO: build facility to trigger onError() from emulator
-                        // see pivotal item: https://www.pivotaltracker.com/story/show/7040343
-                        _self.lastPosition = createPosition();
-                        onSuccess(_self.lastPosition);
-                    }
-                }, delay);
-            },
-
-            watchPosition: function (geolocationSuccess, geolocationError, geolocationOptions) {
-                if (!geolocationOptions) { geolocationOptions = {}; }
-
-                var watchId = (new Date()).getTime().toString(),
-                    watchObj = {},
-                    timeout = geolocationOptions.timeout || 10000;
-
-                watchObj = {
-                    onSuccess: geolocationSuccess,
-                    onError: geolocationError,
-                    interval: timeout
-                };
-
-                _watches[watchId] = watchObj;
-
-                _watches[watchId].intervalId = window.setInterval(function () {
-                    _self.getCurrentPosition(_watches[watchId].onSuccess, _watches[watchId].onError);
-                }, timeout);
-
-                return watchId;
-            },
-
-            lastPosition: null,
-
-            clearWatch: function (watchId) {
-                if (_watches[watchId]) {
-                    window.clearInterval(_watches[watchId].intervalId);
-                    delete _watches[watchId];
                 }
             }
         }
-    }
-};
+    };
 
-module.exports = _self;
+    return _self;
+};

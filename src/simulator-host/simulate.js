@@ -1,5 +1,5 @@
 var db             = require('db'),
-    Messages       = require('./messages'),
+    Messages       = require('messages'),
     customElements = require('./custom-elements'),
     socket         = require('./socket'),
     cordova        = require('cordova');
@@ -33,7 +33,7 @@ function initializePlugins() {
 
         if (plugin) {
             if (typeof plugin === 'function') {
-                var messages = new Messages(pluginId);
+                var messages = new Messages(pluginId, socket.socket);
                 plugins[pluginId] = plugin(messages);
             } else {
                 plugins[pluginId] = plugin;

@@ -18,71 +18,75 @@
  * under the License.
  *
  */
-var event = require('event'),
-    geo = require('./geo'),
-    utils = require('utils'),
-    PositionError = require('./PositionError'),
-    _watches = {},
-    _current = {
-        "latitude": 43.465187,
-        "longitude": -80.522372,
-        "altitude": 100,
-        "accuracy": 150,
-        "altitudeAccuracy": 80,
-        "heading": 0,
-        "velocity": 0,
-    };
 
-function _getCurrentPosition(win, fail) {
-    if (geo.timeout) {
-        if (fail) {
-            var positionError = new PositionError();
+module.exports = function (messages) {
+    var geo = require('./geo-model')(messages),
+        utils = require('utils'),
+        PositionError = require('./PositionError'),
+        _watches = {},
+        _current = {
+            "latitude": 43.465187,
+            "longitude": -80.522372,
+            "altitude": 100,
+            "accuracy": 150,
+            "altitudeAccuracy": 80,
+            "heading": 0,
+            "velocity": 0,
+        };
 
-            positionError.code = PositionError.TIMEOUT;
-            positionError.message = "position timed out";
-            fail(positionError);
-        }
-    }
-    else {
-        win(geo.getPositionInfo());
-    }
-}
+    function _getCurrentPosition(win, fail) {
+        if (geo.timeout) {
+            if (fail) {
+                var positionError = new PositionError();
 
-event.on("PositionInfoUpdatedEvent", function (pi) {
-    _current.latitude = pi.latitude;
-    _current.longitude = pi.longitude;
-    _current.altitude = pi.altitude;
-    _current.accuracy = pi.accuracy;
-    _current.altitudeAccuracy = pi.altitudeAccuracy;
-    _current.heading = pi.heading;
-    _current.velocity = pi.speed;
-
-    utils.forEach(_watches, function (watch) {
-        try {
-            _getCurrentPosition(watch.win, watch.fail);
-        } catch (e) {
-            console.log(e);
-        }
-    });
-});
-
-module.exports = {
-    Geolocation: {
-        getLocation: function (success, error) {
-            _getCurrentPosition(success, error);
-        },
-        addWatch: function (success, error, args) {
-            _watches[args[0]] = {
-                win: success,
-                fail: error
-            };
-            _getCurrentPosition(success, error);
-        },
-        clearWatch: function (success, error, args) {
-            delete _watches[args[0]];
-            if (success && typeof (success) === 'function') {
-                success();
+                positionError.code = PositionError.TIMEOUT;
+                positionError.message = "position timed out";
+                fail(positionError);
             }
         }
+        else {
+            win(geo.getPositionInfo());
+        }
     }
+
+    messages.on('position-info-updated', function (message, pi) {
+        console.log('Setting latitude to: ' + pi.latitude);
+
+        _current.latitude = pi.latitude;
+        _current.longitude = pi.longitude;
+        _current.altitude = pi.altitude;
+        _current.accuracy = pi.accuracy;
+        _current.altitudeAccuracy = pi.altitudeAccuracy;
+        _current.heading = pi.heading;
+        _current.velocity = pi.speed;
+
+        utils.forEach(_watches, function (watch) {
+            try {
+                _getCurrentPosition(watch.win, watch.fail);
+            } catch (e) {
+                console.log(e);
+            }
+        });
+    });
+
+    return {
+        Geolocation: {
+            getLocation: function (success, error) {
+                _getCurrentPosition(success, error);
+            },
+            addWatch: function (success, error, args) {
+                _watches[args[0]] = {
+                    win: success,
+                    fail: error
+                };
+                _getCurrentPosition(success, error);
+            },
+            clearWatch: function (success, error, args) {
+                delete _watches[args[0]];
+                if (success && typeof (success) === 'function') {
+                    success();
+                }
+            }
+        }
+    };
 };
