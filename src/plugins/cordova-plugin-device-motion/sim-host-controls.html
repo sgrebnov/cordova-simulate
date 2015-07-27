@@ -1,0 +1,86 @@
+<!--
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ *
+-->
+
+<!-- Panels -->
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="sim-host-controls.js"></script>
+    <script src="3d.js"></script>
+    <script src="draw.js"></script>
+</head>
+<body>
+<cordova-panel id="device-motion" caption="Accelerometer">
+    <style>
+        #accelerometer-help {
+            font-size: 0.75em;
+            text-align: center;
+        }
+
+        #accelerometer-canvas {
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+
+    <canvas id="accelerometer-canvas" width="300" height="200"></canvas>
+
+    <cordova-panel-row>
+        <em id="accelerometer-help">Click and drag with the mouse to manipulate the device. <br/> Hold the Shift key to modify 'alpha'</em>
+    </cordova-panel-row>
+
+    <cordova-panel-row>
+        <cordova-label label="X (m/s&sup2)"></cordova-label>
+        <cordova-label label="0" id="accel-x-label"></cordova-label>
+    </cordova-panel-row>
+
+    <cordova-panel-row>
+        <cordova-label label="Y (m/s&sup2)"></cordova-label>
+        <cordova-label label="0" id="accel-y-label"></cordova-label>
+    </cordova-panel-row>
+
+    <cordova-panel-row>
+        <cordova-label label="Z (m/s&sup2)"></cordova-label>
+        <cordova-label label="0" id="accel-z-label"></cordova-label>
+    </cordova-panel-row>
+
+    <cordova-panel-row>
+        <cordova-label label="alpha (deg)"></cordova-label>
+        <cordova-label label="0" id="accel-alpha-label"></cordova-label>
+    </cordova-panel-row>
+
+    <cordova-panel-row>
+        <cordova-label label="beta (deg)"></cordova-label>
+        <cordova-label label="0" id="accel-beta-label"></cordova-label>
+    </cordova-panel-row>
+
+    <cordova-panel-row>
+        <cordova-label label="gamma (deg)"></cordova-label>
+        <cordova-label label="0" id="accel-gamma-label"></cordova-label>
+    </cordova-panel-row>
+
+    <cordova-combo id="accel-recorded-data" label="Recorded Data"></cordova-combo>
+    <cordova-panel-row><cordova-button id="accel-play-recorded">Play</cordova-button></cordova-panel-row>
+
+</cordova-panel>
+</body>
+</html>
