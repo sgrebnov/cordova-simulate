@@ -1,4 +1,6 @@
-var cordova_serve = require('cordova-serve'),
+var Q = require('q'),
+    exec = require('child_process').exec,
+    cordova_serve = require('cordova-serve'),
     server = require('./server');
 
 var platform,
@@ -9,11 +11,12 @@ module.exports = function (args) {
 
     processArgs(args);
 
-    // Launch the server with our handlers
-    cordova_serve.servePlatform(platform, {
-        urlPathHandler: server.handleUrlPath,
-        streamHandler: server.streamFile,
-        serverExtender: server.init
+    prepare(platform).then(function () {
+        return cordova_serve.servePlatform(platform, {
+            urlPathHandler: server.handleUrlPath,
+            streamHandler: server.streamFile,
+            serverExtender: server.init
+        });
     }).then(function (serverInfo) {
         urlRoot = 'http://localhost:' + serverInfo.port + '/';
         return cordova_serve.launchBrowser({target: target, url: urlRoot + 'index.html'});
@@ -21,6 +24,22 @@ module.exports = function (args) {
         return cordova_serve.launchBrowser({target: target, url: urlRoot + 'simulator/index.html'});
     });
 };
+
+function prepare(platform) {
+    var d = Q.defer();
+
+    console.log('Preparing platform \'' + platform + '\'.');
+    exec('cordova prepare ' + platform, function (err) {
+        if (err) {
+            console.error('Call to \'cordova prepare\' failed. Ensure you have installed Cordova.');
+            d.reject(err);
+        } else {
+            d.resolve();
+        }
+    });
+
+    return d.promise;
+}
 
 function processArgs(args) {
     platform = null;
