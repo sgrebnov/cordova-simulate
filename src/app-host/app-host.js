@@ -19,6 +19,22 @@ function setCordova(originalCordova) {
     cordova.define('cordova/exec', function (require, exports, module) {
         module.exports = exec;
     });
+
+    // android platform has its own specific initialization
+    // so to emulate it, we need to fake init function
+    if (cordova.platformId === 'android') {
+        exec.init = function () { 
+            cordova.require('cordova/channel').onNativeReady.fire(); 
+        };
+    }
+
+    // windows phone platform fires 'deviceready' event from native component
+    // so to emulate it we fire it in the bootstrap function (similar to ios)
+    if (cordova.platformId === 'windowsphone') {
+        cordova.require('cordova/platform').bootstrap = function () {
+            cordova.require('cordova/channel').onNativeReady.fire();
+        };
+    }
 }
 
 function getCordova() {
