@@ -24,7 +24,7 @@
 var cordova = require('cordova');
 
 module.exports = function (messages) {
-    function handleVibration(success, fail, service, action, args) {
+    function handleVibration (success, fail, service, action, args) {
         console.log('"' + service + '" "' + action + '" called with args "' + args + '"');
         var ms = args[0];
         messages.emit('vibrate', ms, function (result, err) {
@@ -36,7 +36,7 @@ module.exports = function (messages) {
         });
     }
 
-    function handleVibrationWithPattern(success, fail, service, action, args) {
+    function handleVibrationWithPattern (success, fail, service, action, args) {
         console.log('"' + service + '" "' + action + '" called with args "' + args + '"');
         messages.emit('vibrateWithPattern', args, function (result, err) {
             if (err) {
@@ -47,7 +47,7 @@ module.exports = function (messages) {
         });
     }
 
-    function handleCancelVibration(success, fail, service, action, args) {
+    function handleCancelVibration (success, fail, service, action, args) {
         console.log('"' + service + '" "' + action + '" called');
         messages.emit('cancelVibration', 'cancelVibration', function (result, err) {
             if (err) {
