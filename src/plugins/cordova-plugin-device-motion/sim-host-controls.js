@@ -84,7 +84,7 @@ var _mouseDown,
 
 
 // report interval in milliseconds
-var ACCELEROMETER_REPORT_INTERVAL = 250;
+var ACCELEROMETER_REPORT_INTERVAL = 50;
 
 var gConstant = 9.81;
 
@@ -184,7 +184,9 @@ function shake() {
     var id,
         count = 1,
         stopCount = 2500 / ACCELEROMETER_REPORT_INTERVAL,
-        oldX = axisX.textContent;
+        oldX = axisX.textContent,
+        defaultXAxis = 150,
+        defaultYAxis = 100;
 
     id = setInterval(function () {
         var freq = 1,
@@ -192,12 +194,15 @@ function shake() {
             value = Math.round(amp * Math.sin(freq * count * (180 / Math.PI)) * 100) / 100;
     
         if (count > stopCount) {
+            updateCanvasCenter(defaultXAxis, defaultYAxis);
             axisX.textContent = oldX;
             clearInterval(id);
             return;
         }
 
         axisX.textContent = (value * gConstant).toFixed(2);
+        // shake effect
+        updateCanvasCenter(Math.random() * (155 - 145) + 145, defaultYAxis);
         count++;
     }, ACCELEROMETER_REPORT_INTERVAL);
  }
@@ -205,6 +210,13 @@ function shake() {
 module.exports = {
     initialize: initialize,
 };
+
+function updateCanvasCenter(xAxis, yAxis) {
+    ThreeDee.setCenter(xAxis, yAxis);
+    Draw.initialize(document.getElementById('accelerometer-canvas'));
+    Draw.clear(0, 0, 480, 300);
+    Draw.drawScene(ThreeDee.getTranslation(), 3);
+}
 
 function updateCanvas(a, b, g) {
     ThreeDee.loadMesh(_shape);
