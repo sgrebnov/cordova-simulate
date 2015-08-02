@@ -81,6 +81,23 @@ function initialize() {
         this.classList.add('cordova-group');
     }, 'input');
 
+    registerCustomElement('cordova-labeled-value', {
+        value: {
+            set: function (value) {
+                this.shadowRoot.querySelector('span').textContent = value;
+            },
+
+            get: function() {
+                return this.shadowRoot.querySelector('span').textContent;
+            }
+        }
+    }, function () {
+        this.shadowRoot.querySelector('label').textContent = this.getAttribute('label');
+        this.shadowRoot.querySelector('span').textContent = this.getAttribute('value');
+        this.classList.add('cordova-panel-row');
+        this.classList.add('cordova-group');
+    });
+
     registerCustomElement('cordova-button', 'button');
 
     registerCustomElement('cordova-file', {

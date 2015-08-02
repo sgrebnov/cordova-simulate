@@ -98,12 +98,12 @@ var recordedGestures = [
 var accelerometerHandle = null;
 
 function initialize() {
-    axisX = document.getElementById('accel-x-label');
-    axisY = document.getElementById('accel-y-label');
-    axisZ = document.getElementById('accel-z-label');
-    alpha = document.getElementById('accel-alpha-label');
-    beta = document.getElementById('accel-beta-label');
-    gamma = document.getElementById('accel-gamma-label');
+    axisX = document.getElementById('accel-x');
+    axisY = document.getElementById('accel-y');
+    axisZ = document.getElementById('accel-z');
+    alpha = document.getElementById('accel-alpha');
+    beta = document.getElementById('accel-beta');
+    gamma = document.getElementById('accel-gamma');
 
     createCanvas();
 
@@ -146,9 +146,9 @@ cordova.registerPluginHandlers({
 function setToDefaultPosition() {
      var accel = {x: 0, y: 0, z: -1, alpha: 0, beta: 0, gamma: 0 };
 
-     axisX.textContent = (accel.x * gConstant).toFixed(2);
-     axisY.textContent = (accel.y * gConstant).toFixed(2);
-     axisZ.textContent = (accel.z * gConstant).toFixed(2);
+     axisX.value = (accel.x * gConstant).toFixed(2);
+     axisY.value = (accel.y * gConstant).toFixed(2);
+     axisZ.value = (accel.z * gConstant).toFixed(2);
 
     _alpha = accel.alpha;
     _beta = accel.beta;
@@ -169,9 +169,9 @@ function setToDefaultPosition() {
 
 function getCurrentAcceleration () {
     return {
-         x: parseFloat(axisX.textContent),
-         y: parseFloat(axisY.textContent),
-         z: parseFloat(axisZ.textContent),
+         x: parseFloat(axisX.value),
+         y: parseFloat(axisY.value),
+         z: parseFloat(axisZ.value),
          timestamp: (new Date()).getTime()
     };
 }
@@ -184,7 +184,7 @@ function shake() {
     var id,
         count = 1,
         stopCount = 2500 / ACCELEROMETER_REPORT_INTERVAL,
-        oldX = axisX.textContent;
+        oldX = axisX.value;
 
     id = setInterval(function () {
         var freq = 1,
@@ -192,12 +192,12 @@ function shake() {
             value = Math.round(amp * Math.sin(freq * count * (180 / Math.PI)) * 100) / 100;
     
         if (count > stopCount) {
-            axisX.textContent = oldX;
+            axisX.value = oldX;
             clearInterval(id);
             return;
         }
 
-        axisX.textContent = (value * gConstant).toFixed(2);
+        axisX.value = (value * gConstant).toFixed(2);
         count++;
     }, ACCELEROMETER_REPORT_INTERVAL);
  }
@@ -256,18 +256,18 @@ function createCanvas() {
             cosY = Math.cos((_beta) * (Math.PI / 180));
             sinY = Math.sin((_beta) * (Math.PI / 180));
 
-            axisX.textContent = (cosY * sinX * gConstant).toFixed(2);
-            axisY.textContent = (-sinY * gConstant).toFixed(2);
-            axisZ.textContent = (-cosY * cosX * gConstant).toFixed(2);
-            beta.textContent = _beta;
-            gamma.textContent = _gamma;
+            axisX.value = (cosY * sinX * gConstant).toFixed(2);
+            axisY.value = (-sinY * gConstant).toFixed(2);
+            axisZ.value = (-cosY * cosX * gConstant).toFixed(2);
+            beta.value = _beta;
+            gamma.value = _gamma;
 
 
         } else if (_mouseDown && _shiftKeyDown) {
             _deltaAlpha = (_deltaAlpha - (_oldAlphaX - e.offsetX) * 2.5) % 360;
             _alpha = (360 - _deltaAlpha) % 360;
 
-            alpha.textContent = _alpha;
+            alpha.value = _alpha;
         }
 
         _oldX = e.offsetX;
