@@ -29,9 +29,10 @@ function prepare(platform) {
     var d = Q.defer();
 
     console.log('Preparing platform \'' + platform + '\'.');
-    exec('cordova prepare ' + platform, function (err) {
+    exec('cordova prepare ' + platform, function (err, stdout, stderr) {
         if (err) {
-            console.error('Call to \'cordova prepare\' failed. Ensure you have installed Cordova.');
+            stderr = stderr || 'verify \'' + platform + '\' platform has been added to the project.'
+            console.error('Call to \'cordova prepare\' failed: ' + stderr);
             d.reject(err);
         } else {
             d.resolve();
