@@ -42,13 +42,15 @@ function getCordova() {
 }
 
 socket.on('exec-success', function (data) {
-    console.log('exec-success: ' + data);
+    console.log('exec-success:');
+    console.log(data);
     var execCacheInfo = execCache[data.index];
     execCacheInfo.success(data.result);
 });
 
 socket.on('exec-failure', function (data) {
-    console.log('exec-failure: ' + data);
+    console.log('exec-failure:');
+    console.log(data);
     var execCacheInfo = execCache[data.index];
     execCacheInfo.fail(data.error);
 });

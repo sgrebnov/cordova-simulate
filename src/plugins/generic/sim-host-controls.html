@@ -1,0 +1,49 @@
+<!--
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ *
+-->
+
+<!-- Panels -->
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="sim-host-controls.js"></script>
+</head>
+<body>
+<cordova-dialog id="generic-exec" caption="Unhandled Exec Call">
+    <cordova-group>
+        <p>There is no handler for the following exec call:</p>
+        <p style="font-style:italic;color:black"><span id="exec-service">service</span>.<span id="exec-action">action</span></p>
+        <p>Please enter a value below to be returned for this call, then indicate whether this represents success or failure.
+        If you wish to always respond to this call with this result, select the 'persist' option.</p>
+    </cordova-group>
+    <cordova-group>
+        <textarea id="exec-response" rows="10" style="width:100%" class="cordova-widget cordova-state-default"></textarea></textarea>
+        <div class="p" id="exec-error" style="color: red;">The value must be valid JSON (<span style="font-style:italic;" id="exec-parse-error">error</span>)</div>
+    </cordova-group>
+    <!--<cordova-group id="exec-error"><p style="color: red;">The value must be valid JSON (<span style="font-style:italic;" id="exec-parse-error">error</span>)</p></cordova-group>-->
+    <cordova-panel-row>
+        <cordova-checkbox id="exec-persist">Persist</cordova-checkbox>
+        <cordova-group>
+            <cordova-button id="exec-success">Success</cordova-button>
+            <cordova-button id="exec-failure">Failure</cordova-button>
+        </cordova-group>
+    </cordova-panel-row>
+</cordova-dialog></body>
+</html>

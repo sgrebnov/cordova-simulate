@@ -7,6 +7,41 @@ function initialize() {
         this.shadowRoot.querySelector('section').textContent = this.getAttribute('caption');
     });
 
+    registerCustomElement('cordova-item-list', {
+        addItem: {
+            value: function (item) {
+                this.appendChild(item);
+            }
+        },
+        removeItem: {
+            value: function (item) {
+                this.removeChild(this.children[item]);
+            }
+        }
+    }, function () {
+        this.classList.add('cordova-group');
+    });
+    registerCustomElement('cordova-item', function () {
+        this.classList.add('cordova-group');
+        var item = this;
+        this.addEventListener('click', function (e) {
+            if (e.target === this) {
+                // If the click target is our self, the only thing that could have been clicked is the delete icon.
+
+                var list = this.parentNode;
+
+                // If we're within a list, calculate index in the list
+                var childIndex = list && list.tagName === 'CORDOVA-ITEM-LIST' ? Array.prototype.indexOf.call(list.children, this) : -1;
+
+                // Raise an event on ourselves
+                var itemRemovedEvent = new CustomEvent('itemremoved', {detail: {itemIndex: childIndex}, bubbles: true});
+                this.dispatchEvent(itemRemovedEvent);
+
+                list.removeChild(this);
+            }
+        });
+    });
+
     registerCustomElement('cordova-panel-row', function () {
         this.classList.add('cordova-panel-row');
         this.classList.add('cordova-group');
@@ -26,8 +61,13 @@ function initialize() {
             }
         }
     }, function () {
-        this.classList.add('cordova-panel-row');
-        this.classList.add('cordova-group');
+        if (this.parentNode.tagName === 'CORDOVA-PANEL') {
+            this.classList.add('cordova-panel-row');
+            this.classList.add('cordova-group');
+        } else {
+            // Reverse the order of the checkbox and caption
+            this.shadowRoot.appendChild(this.shadowRoot.querySelector('label'));
+        }
     });
 
     registerCustomElement('cordova-radio', {
@@ -82,6 +122,15 @@ function initialize() {
     }, 'input');
 
     registerCustomElement('cordova-labeled-value', {
+        label: {
+            set: function (value) {
+                this.shadowRoot.querySelector('label').textContent = value;
+            },
+
+            get: function() {
+                return this.shadowRoot.querySelector('label').textContent;
+            }
+        },
         value: {
             set: function (value) {
                 this.shadowRoot.querySelector('span').textContent = value;

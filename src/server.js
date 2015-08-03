@@ -138,7 +138,7 @@ function init(server, root) {
 
     function initPluginList() {
         // Always defined plugins
-        pluginList = ['events'];
+        pluginList = ['exec-list','events','generic'];
 
         var pluginPath = path.resolve(root, 'plugins');
         if (fs.existsSync(pluginPath)) {
@@ -273,7 +273,7 @@ function streamFile(filePath, request, response) {
     }
 
     if (request.url === '/simulator/simulate.js') {
-        streamSimulatorJs(filePath, request, response)
+        streamSimulatorJs(filePath, request, response);
         return true;
     }
 

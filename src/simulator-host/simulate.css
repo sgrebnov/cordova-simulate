@@ -8,6 +8,11 @@ body {
     overflow-y: hidden;
     font-family: 'Helvetica Neue', 'Roboto', 'Segoe UI', sans-serif;
     background: rgb(238,238,238);
+    user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-user-select: none;
+    cursor: default;
 }
 
 html {
@@ -75,6 +80,7 @@ body /deep/ cordova-dialog > *::shadow > .cordova-group,
 body /deep/ cordova-panel > .cordova-group,
 body /deep/ cordova-dialog > .cordova-group {
     margin: 12px;
+    position: relative;
 }
 
 .cordova-main {
@@ -101,7 +107,7 @@ body /deep/ cordova-dialog > .cordova-group {
     height: 100%;
 }
 
-body /deep/ label {
+body /deep/ label, body /deep/ p, body /deep/ .p {
     color: #3c8b9e;
     font-size: 14px;
 }
@@ -109,6 +115,10 @@ body /deep/ label {
 body /deep/ .cordova-value {
     color: black;
     font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-left: 6px;
 }
 
 body /deep/ input {
@@ -238,7 +248,7 @@ body /deep/ .cordova-panel-row {
     align-items: center;
 }
 
-body /deep/ cordova-group {
+body /deep/ cordova-group, body /deep/ cordova-item-list {
     display: block;
 }
 
@@ -248,4 +258,24 @@ body /deep/ .cordova-radio-wrapper.cordova-inline {
 
 body /deep/ .cordova-radio-label {
     padding-left: 0.25em;
+}
+
+body /deep/ cordova-item+cordova-item {
+    display: block;
+    border-top: #d3d3d3 1px solid;
+    margin-top: 10px;
+    padding-top: 10px;
+}
+
+body /deep/ cordova-item:hover:before {
+    content: url(delete.png);
+    position: absolute;
+    margin-left: auto;
+    right: 0;
+    background: white;
+    font-size: 14px;
+    padding-left: 8px;
+    font-weight: bold;
+    color: darkred;
+    cursor: pointer;
 }

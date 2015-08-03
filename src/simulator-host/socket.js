@@ -1,4 +1,5 @@
-var cordova = require('cordova');
+var cordova = require('cordova'),
+    savedSims = require('saved-sims');
 
 var socket;
 
@@ -34,16 +35,24 @@ module.exports.initialize = function () {
             throw 'Exec called on simulation host without an action specified';
         }
 
+        var savedSim = savedSims.findSavedSim(service, action);
+        if (savedSim) {
+            if (savedSim.success) {
+                success(savedSim.value);
+            } else {
+                failure(savedSim.value);
+            }
+            return;
+        }
+
         var handlerId = service + '.' + action;
         console.log('cordova.pluginHandlers');
         console.log(cordova.pluginHandlers);
         var handler = cordova.pluginHandlers[handlerId];
-
         if (!handler) {
-            console.log('No simulation plugin handler for ' + handlerId);
-        } else {
-            handler(success, failure, service, action, data.args);
+            handler = cordova.pluginHandlers['Generic.generic'];
         }
+        handler(success, failure, service, action, data.args);
     });
 }
 
