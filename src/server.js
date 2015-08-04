@@ -138,7 +138,7 @@ function init(server, root) {
 
     function initPluginList() {
         // Always defined plugins
-        pluginList = ['exec-list','events','generic'];
+        pluginList = ['exec','events'];
 
         var pluginPath = path.resolve(root, 'plugins');
         if (fs.existsSync(pluginPath)) {

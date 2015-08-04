@@ -26,12 +26,15 @@
     <script src="sim-host-controls.js"></script>
 </head>
 <body>
-<cordova-dialog id="generic-exec" caption="Unhandled Exec Call">
+<cordova-panel id="exec-panel" caption="Simulation History">
+    <cordova-item-list id="exec-list" max-length="10"></cordova-item-list>
+</cordova-panel>
+<cordova-dialog id="exec-dialog" caption="Unhandled Exec Call">
     <cordova-group>
         <p>There is no handler for the following exec call:</p>
         <p style="font-style:italic;color:black"><span id="exec-service">service</span>.<span id="exec-action">action</span></p>
         <p>Please enter a value below to be returned for this call, then indicate whether this represents success or failure.
-        If you wish to always respond to this call with this result, select the 'persist' option.</p>
+            If you wish to always respond to this call with this result, select the 'persist' option.</p>
     </cordova-group>
     <cordova-group>
         <textarea id="exec-response" rows="10" style="width:100%" class="cordova-widget cordova-state-default"></textarea></textarea>
@@ -45,5 +48,6 @@
             <cordova-button id="exec-failure">Failure</cordova-button>
         </cordova-group>
     </cordova-panel-row>
-</cordova-dialog></body>
+</cordova-dialog>
+</body>
 </html>
