@@ -287,9 +287,13 @@ function streamFile(filePath, request, response) {
     return true;
 }
 
+function getBrowserifySearchPath() {
+    return [path.join(__dirname, 'modules'), path.join(__dirname, 'third-party')];
+}
+
 function streamPluginSimHostJs(filePath, pluginId, request, response) {
     // TODO: Optimize this so we build the file once and reuse it, unless dependencies have changed
-    var b = browserify({paths: [path.join(__dirname, 'modules')]});
+    var b = browserify({paths: getBrowserifySearchPath()});
     b.exclude('cordova');
     b.exclude('db');
     b.exclude('event');
@@ -302,7 +306,7 @@ function streamPluginSimHostJs(filePath, pluginId, request, response) {
 }
 
 function streamSimulatorJs(filePath, request, response) {
-    var b = browserify({paths: [path.join(__dirname, 'modules')]});
+    var b = browserify({paths: getBrowserifySearchPath()});
     b.add(filePath);
     b.require('cordova');
     b.require('db');
@@ -334,7 +338,7 @@ function streamAppHost(filePath, request, response) {
     var pluginHandlers = [];
     var pluginClobbers = [];
 
-    var b = browserify({paths: [path.join(__dirname, 'modules')]});
+    var b = browserify({paths: getBrowserifySearchPath()});
     b.transform(function (file) {
         if (file === filePath) {
             var data = '';

@@ -19,7 +19,7 @@
  *
  */
 
-var jQuery = require('./jquery.min.js');
+var jQuery = require('jquery.min.js');
 var Q = require('q');
 
 module.exports = function (messages) {
