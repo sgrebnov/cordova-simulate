@@ -30,6 +30,9 @@ var axisX,
     beta,
     gamma;
 
+var defaultXAxis = 100,
+    defaultYAxis = 80;
+
 var _mouseDown,
     _shiftKeyDown = false,
     _offsets,
@@ -184,9 +187,7 @@ function shake() {
     var id,
         count = 1,
         stopCount = 2500 / ACCELEROMETER_REPORT_INTERVAL,
-        oldX = axisX.value,
-        defaultXAxis = 150,
-        defaultYAxis = 100;
+        oldX = axisX.value;
 
     id = setInterval(function () {
         var freq = 1,
@@ -202,7 +203,8 @@ function shake() {
 
         axisX.value = (value * gConstant).toFixed(2);
         // shake effect
-        updateCanvasCenter(Math.random() * (155 - 145) + 145, defaultYAxis);
+        var center = Math.random() * 10 + (defaultXAxis - 5);
+        updateCanvasCenter(center, defaultYAxis);
         count++;
     }, ACCELEROMETER_REPORT_INTERVAL);
  }
@@ -235,7 +237,7 @@ function createCanvas() {
     var node = document.getElementById('accelerometer-canvas'),
         cosX, sinX, cosY, sinY;
 
-    ThreeDee.setCenter(150, 100);
+    ThreeDee.setCenter(defaultXAxis, defaultYAxis);
     ThreeDee.setLight(-300, -300, 800);
 
     node.addEventListener('mousemove', function (e) {
