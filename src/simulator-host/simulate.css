@@ -56,18 +56,13 @@ cordova-panel, cordova-dialog {
 body /deep/ .cordova-header {
     border-top-left-radius: 2px;
     border-top-right-radius: 2px;
-    padding: 0;
+    padding: 5px 9px;
     position: relative;
-    cursor: pointer;
     background-color: #03a9f4;
     color: #fff;
     font-size: 16px;
     height: 24px;
     line-height: 24px;
-}
-
-body /deep/ .cordova-collapse-handle {
-    padding: 5px 9px;
 }
 
 body /deep/ .cordova-widget {
@@ -278,4 +273,30 @@ body /deep/ cordova-item:hover:before {
     font-weight: bold;
     color: darkred;
     cursor: pointer;
+}
+
+body /deep/ .cordova-collapse-icon {
+    cursor: pointer;
+    background: url('collapse.png') no-repeat 50% 50%;
+    width: 22px;
+    height: 22px;
+    position: absolute;
+    margin-top: 1px;
+    margin-bottom: auto;
+    right: 6px;
+    margin-left: auto;
+}
+
+body /deep/ .cordova-collapse-icon.cordova-collapsed {
+    background: url('expand.png') no-repeat 50% 50%;
+}
+
+
+body /deep/ .cordova-collapse-icon:hover {
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+body /deep/ .cordova-content {
+    overflow: hidden;
+    transition: height 0.2s;
 }

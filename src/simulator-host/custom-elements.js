@@ -1,10 +1,55 @@
 function initialize() {
     registerCustomElement('cordova-panel', function () {
-        this.shadowRoot.querySelector('section').textContent = this.getAttribute('caption');
+        var panel = this;
+        var content = panel.shadowRoot.querySelector('.cordova-content');
+
+        this.shadowRoot.querySelector('.cordova-header span').textContent = this.getAttribute('caption');
+
+        this.shadowRoot.querySelector('.cordova-collapse-icon').addEventListener('click', function (e) {
+            // Animate showing and hiding the panel. Note that we can't use jQuery for this, because it doesn't work
+            // with elements in the shadow DOM.
+
+            var collapsed = e.target.classList.contains('cordova-collapsed');
+
+            if (collapsed) {
+                e.target.classList.remove('cordova-collapsed');
+
+                // Trick to get the current computed height (won't animate) - note that we want to get this dynamically
+                // now rather than storing it before we collapse, since things could happen while we're collapsed that
+                // change our height.
+                content.style.display = '';
+                content.style.height = '';
+                var computedHeight = window.getComputedStyle(content).height;
+                content.style.height = '0';
+
+                // Animate to computed height after a timeout
+                window.setTimeout(function () {
+                    content.style.height = computedHeight;
+                }, 0);
+            } else {
+                e.target.classList.add('cordova-collapsed');
+
+                // Force height to a value that can be animated, then set to 0 after a timeout. We store the height in
+                // max-height to use when we're animating back to full height.
+                content.style.height = window.getComputedStyle(content).height;
+                window.setTimeout(function () {
+                    content.style.height = '0';
+                }, 0);
+            }
+        });
+
+        content.addEventListener('transitionend', function (e) {
+            // After we've transitioned back to full size, reset height to empty to allow dynamic height changes.
+            if (parseInt(e.target.style.height) === 0) {
+                e.target.style.display = 'none';
+            } else {
+                e.target.style.height = '';
+            }
+        });
     });
 
     registerCustomElement('cordova-dialog', function () {
-        this.shadowRoot.querySelector('section').textContent = this.getAttribute('caption');
+        this.shadowRoot.querySelector('.cordova-header span').textContent = this.getAttribute('caption');
     });
 
     registerCustomElement('cordova-item-list', {
@@ -186,7 +231,7 @@ function initialize() {
     }, function () {
         this.classList.add('cordova-panel-row');
         this.classList.add('cordova-group');
-        var select = this.shadowRoot.querySelector('select')
+        var select = this.shadowRoot.querySelector('select');
         var label = this.getAttribute('label');
         if (label) {
             this.shadowRoot.querySelector('label').textContent = this.getAttribute('label');
