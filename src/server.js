@@ -287,33 +287,50 @@ function streamFile(filePath, request, response) {
     return true;
 }
 
-function getBrowserifySearchPath() {
-    return [path.join(__dirname, 'modules'), path.join(__dirname, 'third-party')];
+var _browserifySearchPaths = null;
+function getBrowserifySearchPaths() {
+    _browserifySearchPaths = _browserifySearchPaths || [path.join(__dirname, 'modules'), path.join(__dirname, 'third-party')];
+    return _browserifySearchPaths;
+}
+
+var _commonModules = null;
+function getCommonModules() {
+    if (!_commonModules) {
+        _commonModules = [];
+        getBrowserifySearchPaths().forEach(function (searchPath) {
+            fs.readdirSync(searchPath).forEach(function (file) {
+                if (path.extname(file) === '.js') {
+                    _commonModules.push(path.basename(file, '.js'));
+                }
+            });
+        });
+    }
+    return _commonModules;
 }
 
 function streamPluginSimHostJs(filePath, pluginId, request, response) {
     // TODO: Optimize this so we build the file once and reuse it, unless dependencies have changed
-    var b = browserify({paths: getBrowserifySearchPath()});
-    b.exclude('cordova');
-    b.exclude('db');
-    b.exclude('event');
-    b.exclude('exception');
-    b.exclude('sim-constants');
-    b.exclude('utils');
+    var b = browserify({paths: getBrowserifySearchPaths()});
+
+    // Exclude common modules since they will be included with the main sim js file.
+    getCommonModules().forEach(function (moduleName) {
+        b.exclude(moduleName);
+    });
+
     b.require(filePath, {expose: pluginId});
     var bundle = b.bundle();
     server.sendStream(filePath, request, response, bundle, true);
 }
 
 function streamSimulatorJs(filePath, request, response) {
-    var b = browserify({paths: getBrowserifySearchPath()});
+    var b = browserify({paths: getBrowserifySearchPaths()});
     b.add(filePath);
-    b.require('cordova');
-    b.require('db');
-    b.require('event');
-    b.require('exception');
-    b.require('sim-constants');
-    b.require('utils');
+
+    // Include common modules
+    getCommonModules().forEach(function (moduleName) {
+        b.require(moduleName);
+    });
+
     var bundle = b.bundle();
     server.sendStream(filePath, request, response, bundle, true);
 }
@@ -338,7 +355,7 @@ function streamAppHost(filePath, request, response) {
     var pluginHandlers = [];
     var pluginClobbers = [];
 
-    var b = browserify({paths: getBrowserifySearchPath()});
+    var b = browserify({paths: getBrowserifySearchPaths()});
     b.transform(function (file) {
         if (file === filePath) {
             var data = '';
