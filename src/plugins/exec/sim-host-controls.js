@@ -65,8 +65,8 @@ function addEmptyItem() {
     var sims = savedSims.sims;
     if (sims.length === 0) {
         execList.addItem(createEmptyItem());
+        hasEmptyItem = true;
     }
-    hasEmptyItem = true;
 }
 
 function removeEmptyItem() {
@@ -79,7 +79,6 @@ function removeEmptyItem() {
     hasEmptyItem = false;
 }
 
-var eventsBound = false;
 function handleUnknownExecCall(success, fail, service, action, args) {
     // If we have a saved sim for this service.action, use that
     var savedSim = savedSims.findSavedSim(service, action);
@@ -128,11 +127,10 @@ function handleUnknownExecCall(success, fail, service, action, args) {
         func.apply(null, result ? [result] : []);
     }
 
-    if (!eventsBound) {
-        successButton.addEventListener('click', handleSuccess);
-        failureButton.addEventListener('click', handleFailure);
-        eventsBound = true;
-    }
+    // Do this each time to capture the values from the current closure. Also, use this approach rather than
+    // addEventListener(), as it can prove difficult to remove the event listener.
+    successButton.onclick = handleSuccess;
+    failureButton.onclick = handleFailure;
 
     resultField.value = '';
     cordova.showDialog('exec-dialog');
