@@ -300,7 +300,7 @@ function getCommonModules() {
         getBrowserifySearchPaths().forEach(function (searchPath) {
             fs.readdirSync(searchPath).forEach(function (file) {
                 if (path.extname(file) === '.js') {
-                    _commonModules.push(path.basename(file, '.js'));
+                    _commonModules.push({name: path.basename(file, '.js'), file: path.join(searchPath, file)});
                 }
             });
         });
@@ -313,8 +313,8 @@ function streamPluginSimHostJs(filePath, pluginId, request, response) {
     var b = browserify({paths: getBrowserifySearchPaths()});
 
     // Exclude common modules since they will be included with the main sim js file.
-    getCommonModules().forEach(function (moduleName) {
-        b.exclude(moduleName);
+    getCommonModules().forEach(function (module) {
+        b.exclude(module.name);
     });
 
     b.require(filePath, {expose: pluginId});
@@ -327,8 +327,8 @@ function streamSimulatorJs(filePath, request, response) {
     b.add(filePath);
 
     // Include common modules
-    getCommonModules().forEach(function (moduleName) {
-        b.require(moduleName);
+    getCommonModules().forEach(function (module) {
+        b.require(module.file, {expose: module.name});
     });
 
     var bundle = b.bundle();
