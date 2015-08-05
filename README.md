@@ -1,13 +1,17 @@
 A browser based plugin simulation tool to aid development and testing of Cordova applications.
 
+It is somewhat based on [Apache Ripple&trade;](http://ripple.incubator.apache.org/), but aims to improve it in the following ways:
+
+1. Separates the simulation UI from the app (to improve the debugging experience, and allow for using modern browser developer tools). This also protects the UI from a misbehaving app.
+2. Allows plugins to define their own simulation UI.
+
 **Note that this is currently a work in progress / prototype! It still lacks a bunch of functionality, and may be quite buggy.**
 
 # Installation
 
 ```
-npm install -g cordova-simulator
+npm install -g cordova-simulate
 ```
-
 
 
 # Usage
