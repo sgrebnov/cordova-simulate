@@ -28,7 +28,16 @@ Where:
 
 Cordova simulator will launch your app in the browser, and open a second browser window displaying UI that allows you to control how plugins in your application work.
 
-This preview version includes built-in support for the a bunch of Cordova plugins, and also allows for plugins to define their own UI. To add simulation support to a plugin, follow these steps:
+This preview version includes built-in support for the following Cordova plugins:
+
+* [cordova-plugin-camera](https://github.com/apache/cordova-plugin-camera)
+* [cordova-plugin-device](https://github.com/apache/cordova-plugin-device)
+* [cordova-plugin-device-motion](https://github.com/apache/cordova-plugin-device-motion)
+* [cordova-plugin-geolocation](https://github.com/apache/cordova-plugin-geolocation)
+* [cordova-plugin-globalization](https://github.com/apache/cordova-plugin-globalization)
+* [cordova-plugin-vibration](https://github.com/apache/cordova-plugin-vibration)
+
+It also allows for plugins to define their own UI. To add simulation support to a plugin, follow these steps:
 
 1. Clone the `cordova-simulator` git repository (`git clone https://github.com/TimBarham/cordova-simulator.git`), as it contains useful example code (see `src/plugins`).
 2. Add your plugin UI code to your plugin in `src/simulation`. There must be a file called `sim-host-controls.html`, which defines the UI to display in the simulation window, and there can also be supporting js, css and image files which it references.
