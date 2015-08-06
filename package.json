@@ -1,13 +1,13 @@
 {
   "name": "cordova-simulate",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A browser based plugin simulation tool to aid development and testing of Cordova applications.",
   "bin": {
     "simulate": "./bin/simulate"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/TimBarham/cordova-simulator.git"
+    "url": "https://github.com/TimBarham/cordova-simulate.git"
   },
   "keywords": [
     "cordova",
@@ -17,9 +17,9 @@
   "author": "Tim Barham",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/TimBarham/cordova-simulator/issues"
+    "url": "https://github.com/TimBarham/cordova-simulate/issues"
   },
-  "homepage": "https://github.com/TimBarham/cordova-simulator",
+  "homepage": "https://github.com/TimBarham/cordova-simulate",
   "dependencies": {
     "browserify": "^10.2.4",
     "combined-stream": "^1.0.3",

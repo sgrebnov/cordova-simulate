@@ -21,6 +21,11 @@
 
 # Cordova-simulate Release Notes
 
+### 0.1.2 (Aug 5, 2015)
+* Readme updates (including corrected install instructions) ([75159a1](https://github.com/TimBarham/cordova-simulate/commit/75159a15cf1c2e3a2be77e87201aea080e840e08)).
+* Fix for error when cordova is installed locally to the app ([117fb42](https://github.com/TimBarham/cordova-simulate/commit/117fb42685ab1df9ab4ea11e69097dbc05e18016)).
+* Added `RELEASENOTES.md` ([cf99271](https://github.com/TimBarham/cordova-simulate/commit/cf99271f2720e3edd2b632291fff26d2dc148577)).
+
 ### 0.1.1 (Aug 4, 2015)
 * Updated styling.
 * Added `Events` panel.
