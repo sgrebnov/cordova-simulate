@@ -21,12 +21,12 @@
 
 A browser based plugin simulation tool to aid development and testing of Cordova applications.
 
+<mark>Note that this is currently a work in progress / prototype! It still lacks a bunch of functionality, and may be quite buggy.</mark>
+
 It is somewhat based on [Apache Ripple&trade;](http://ripple.incubator.apache.org/), but aims to improve it in the following ways:
 
 1. Separates the simulation UI from the app (to improve the debugging experience, and allow for using modern browser developer tools). This also protects the UI from a misbehaving app.
 2. Allows plugins to define their own simulation UI.
-
-**Note that this is currently a work in progress / prototype! It still lacks a bunch of functionality, and may be quite buggy.**
 
 # Installation
 
@@ -51,7 +51,7 @@ Where:
 
 # What it does
 
-Cordova simulator will launch your app in the browser, and open a second browser window displaying UI that allows you to control how plugins in your application work.
+Cordova simulate will launch your app in the browser, and open a second browser window displaying UI that allows you to control how plugins in your application work.
 
 This preview version includes built-in support for the following Cordova plugins:
 
@@ -64,5 +64,5 @@ This preview version includes built-in support for the following Cordova plugins
 
 It also allows for plugins to define their own UI. To add simulation support to a plugin, follow these steps:
 
-1. Clone the `cordova-simulator` git repository (`git clone https://github.com/TimBarham/cordova-simulator.git`), as it contains useful example code (see `src/plugins`).
+1. Clone the `cordova-simulate` git repository (`git clone https://github.com/TimBarham/cordova-simulate.git`), as it contains useful example code (see `src/plugins`).
 2. Add your plugin UI code to your plugin in `src/simulation`. There must be a file called `sim-host-controls.html`, which defines the UI to display in the simulation window, and there can also be supporting js, css and image files which it references.
