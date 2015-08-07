@@ -1,4 +1,4 @@
-// TODO: Currently sim-host includes each plugin's sim-host-controls.js as a separate file rather than using browserify
+// TODO: Currently sim-host includes each plugin's sim-host.js as a separate file rather than using browserify
 // to build them into one single conglomerate. This means we end up with separate instances of required() files like
 // this one, and hence separate instances of our saved sim data. To work around that, we temporarily always work with
 // the value saved to storage.

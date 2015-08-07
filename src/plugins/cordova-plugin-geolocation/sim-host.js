@@ -476,8 +476,6 @@ module.exports = function(messages) {
             triggerPositionUpdatedMessage();
 
             function triggerPositionUpdatedMessage() {
-                console.log('Emitting position updated message in sim-host-controls with latitude: ' + latitude.value);
-
                 messages.emit(positionUpdatedMessage, {
                     latitude: latitude.value,
                     longitude: longitude.value,

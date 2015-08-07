@@ -31,14 +31,14 @@ var pluginPaths = [],
 
 var PLUGIN_SIMULATION_FILES = {
     'SIM_HOST': {
-        'HTML': 'sim-host-controls.html',
-        'JS': 'sim-host-controls.js',
+        'HTML': 'sim-host.html',
+        'JS': 'sim-host.js',
         'HANDLERS': 'sim-host-handlers.js'
     },
     'APP_HOST': {
-        'JS': 'sim-app-host.js',
-        'HANDLERS': 'sim-app-host-handlers.js',
-        'CLOBBERS': 'sim-app-host-clobbers.js'
+        'JS': 'app-host.js',
+        'HANDLERS': 'app-host-handlers.js',
+        'CLOBBERS': 'app-host-clobbers.js'
     }
 };
 
@@ -162,7 +162,7 @@ function init(server, root) {
     function initPluginPaths() {
         pluginList.forEach(function (pluginId) {
             // To be recognized for simulations, we need to find one of the known simulation files
-            // (sim-host-controls.html, sim-host-controls.js or sim-app-host.js)
+            // (such as sim-host.html, sim-host.js or app-host.js)
             var pluginFilePath = findPluginPath(pluginId);
             if (pluginFilePath) {
                 pluginPaths[pluginId] = pluginFilePath;
@@ -353,7 +353,7 @@ function streamSimulator(filePath, request, response) {
     // Inject references to simulation HTML files
     var simHostHtmlBasename = PLUGIN_SIMULATION_FILES.SIM_HOST.HTML;
     var pluginHtml = [];
-    var pluginLinkTemplate = '<link id="%PLUGINID%-import" rel="import" href="plugin/%PLUGINID%/sim-host-controls.html">';
+    var pluginLinkTemplate = '<link id="%PLUGINID%-import" rel="import" href="plugin/%PLUGINID%/sim-host.html">';
     pluginList.forEach(function (pluginId) {
         var pluginPath = pluginPaths[pluginId];
         var pluginSimHostHtmlFile = pluginPath && path.join(pluginPath, simHostHtmlBasename);
