@@ -273,27 +273,41 @@ function registerCustomElement(name) {
 
         var eventTarget = eventTargetSelector && this.shadowRoot.querySelector(eventTargetSelector);
         if (eventTarget) {
-            // Make sure added events are redirected
-            Object.defineProperty(this, 'addEventListener', {
-                value: function (arg1, arg2, arg3) {
-                    eventTarget.addEventListener(arg1, arg2, arg3);
+            // Make sure added events are redirected. Add more on<event> handlers here as we find they're needed
+            Object.defineProperties(this, {
+                addEventListener: {
+                    value: function (a, b, c) {
+                        eventTarget.addEventListener(a, b, c);
+                    }
+                },
+                click: {
+                    value: eventTarget.click
+                },
+                onclick: {
+                    get: function () {
+                        return eventTarget.onclick;
+                    },
+                    set: function (value) {
+                        eventTarget.onclick = value;
+                    }
+                },
+                onchange: {
+                    get: function () {
+                        return eventTarget.onchange;
+                    },
+                    set: function (value) {
+                        eventTarget.onchange = value;
+                    }
                 }
             });
         }
 
+        // We don't allow inline event handlers. Detect them and strip.
         var atts = this.attributes;
         Array.prototype.forEach.call(atts, function (att) {
             if (att.name.indexOf('on') === 0) {
-                var attValue = mungeEventHandler(this, att);
-                if (eventTarget) {
-                    this.removeAttribute(att.name);
-                    eventTarget.setAttribute(att.name, attValue);
-                } else {
-                    console.log('PROCESSING EVENT FOR OBJECT WITHOUT AN EVENT TARGET: ' + att.name);
-                    if (attValue != att.value) {
-                        this.setAttribute(att.name, attValue);
-                    }
-                }
+                console.error('Unsupported inline event handlers detected: ' + name + '.' + att.name + '="' + att.value + '"');
+                this.removeAttribute(att.name);
             }
         }, this);
 
@@ -325,32 +339,6 @@ function registerCustomElement(name) {
     window[constructorName] = document.registerElement(name, {
         prototype: proto
     });
-}
-
-function mungeEventHandler(element, att) {
-
-    var attValue = att.value;
-    var parentPanel = findParent(element, ['cordova-panel', 'cordova-dialog']);
-    if (!parentPanel) {
-        return attValue;
-    }
-
-    var pluginId = parentPanel.getAttribute('data-cordova-pluginid');
-    if (!pluginId) {
-        return attValue;
-    }
-
-    var handlers = window.plugins[pluginId];
-    if (!handlers) {
-        return attValue;
-    }
-
-    var pos = attValue.indexOf('(');
-    if (pos === -1) {
-        return attValue;
-    }
-
-    return handlers[attValue.substr(0, pos)] ? 'window.plugins[\'' + pluginId + '\'].' + attValue : attValue;
 }
 
 function findParent(element, tag) {

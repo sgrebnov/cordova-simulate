@@ -30,11 +30,16 @@ var pluginPaths = [],
     pluginList;
 
 var PLUGIN_SIMULATION_FILES = {
-    'SIM_HOST_HTML': 'sim-host-controls.html',
-    'SIM_HOST_JS': 'sim-host-controls.js',
-    'APP_HOST_JS': 'sim-app-host.js',
-    'APP_HOST_HANDLERS': 'sim-app-host-handlers.js',
-    'APP_HOST_CLOBBERS': 'sim-app-host-clobbers.js'
+    'SIM_HOST': {
+        'HTML': 'sim-host-controls.html',
+        'JS': 'sim-host-controls.js',
+        'HANDLERS': 'sim-host-handlers.js'
+    },
+    'APP_HOST': {
+        'JS': 'sim-app-host.js',
+        'HANDLERS': 'sim-app-host-handlers.js',
+        'CLOBBERS': 'sim-app-host-clobbers.js'
+    }
 };
 
 function init(server, root) {
@@ -97,7 +102,7 @@ function init(server, root) {
             });
 
             socket.on('get-plugin-info', function (pluginId, callback) {
-                var pluginHtmlFileName = PLUGIN_SIMULATION_FILES.SIM_HOST_HTML;
+                var pluginHtmlFileName = PLUGIN_SIMULATION_FILES.SIM_HOST.HTML;
                 var pluginPath = pluginPaths[pluginId];
                 var pluginFilePath = pluginPath && path.join(pluginPath, pluginHtmlFileName);
 
@@ -158,14 +163,23 @@ function init(server, root) {
         pluginList.forEach(function (pluginId) {
             // To be recognized for simulations, we need to find one of the known simulation files
             // (sim-host-controls.html, sim-host-controls.js or sim-app-host.js)
-            for (var file in PLUGIN_SIMULATION_FILES) {
-                var pluginFilePath = findPluginSourceFilePath(pluginId, PLUGIN_SIMULATION_FILES[file]);
-                if (pluginFilePath) {
-                    pluginPaths[pluginId] = pluginFilePath;
-                    break;
-                }
+            var pluginFilePath = findPluginPath(pluginId);
+            if (pluginFilePath) {
+                pluginPaths[pluginId] = pluginFilePath;
             }
         });
+    }
+
+    function findPluginPath(pluginId, hostType) {
+        if (!hostType) {
+            return findPluginPath(pluginId, 'SIM_HOST') || findPluginPath(pluginId, 'APP_HOST');
+        }
+        for (var file in PLUGIN_SIMULATION_FILES[hostType]) {
+            var pluginFilePath = findPluginSourceFilePath(pluginId, PLUGIN_SIMULATION_FILES[hostType][file]);
+            if (pluginFilePath) {
+                return pluginFilePath;
+            }
+        }
     }
 
     function findPluginSourceFilePath(pluginId, file) {
@@ -264,7 +278,7 @@ function streamFile(filePath, request, response) {
         return true;
     }
     if (request.url === '/simulator/app-host/app-host.js') {
-        streamAppHost(filePath, request, response);
+        streamAppHostJs(filePath, request, response);
         return true;
     }
     if (request.url === '/simulator/index.html' || request.url === '/simulator/simulate.html') {
@@ -273,12 +287,12 @@ function streamFile(filePath, request, response) {
     }
 
     if (request.url === '/simulator/simulate.js') {
-        streamSimulatorJs(filePath, request, response);
+        streamSimulatorJs2(filePath, request, response);
         return true;
     }
 
     var requestPathArray = request.url.split('/');
-    if (requestPathArray[1] === 'simulator' && requestPathArray[2] === 'plugin' && requestPathArray[4] === PLUGIN_SIMULATION_FILES.SIM_HOST_JS) {
+    if (requestPathArray[1] === 'simulator' && requestPathArray[2] === 'plugin' && requestPathArray[4] === PLUGIN_SIMULATION_FILES.SIM_HOST.JS) {
         streamPluginSimHostJs(filePath, requestPathArray[3], request, response);
         return true;
     }
@@ -337,7 +351,7 @@ function streamSimulatorJs(filePath, request, response) {
 
 function streamSimulator(filePath, request, response) {
     // Inject references to simulation HTML files
-    var simHostHtmlBasename = PLUGIN_SIMULATION_FILES.SIM_HOST_HTML;
+    var simHostHtmlBasename = PLUGIN_SIMULATION_FILES.SIM_HOST.HTML;
     var pluginHtml = [];
     var pluginLinkTemplate = '<link id="%PLUGINID%-import" rel="import" href="plugin/%PLUGINID%/sim-host-controls.html">';
     pluginList.forEach(function (pluginId) {
@@ -350,23 +364,47 @@ function streamSimulator(filePath, request, response) {
     server.sendStream(filePath, request, response, fs.createReadStream(filePath).pipe(replaceStream(/<\/\s*head\s*>/, pluginHtml.join('\n') + '</head>')), true);
 }
 
-function streamAppHost(filePath, request, response) {
-    var pluginCode = [];
-    var pluginHandlers = [];
-    var pluginClobbers = [];
+function createScriptDefs(hostType, scriptTypes) {
+    return scriptTypes.map(function (scriptType) {
+        return {
+            comment: {
+                'JS': '/** PLUGINS **/',
+                'HANDLERS': '/** PLUGIN-HANDLERS **/',
+                'CLOBBERS': '/** PLUGIN-CLOBBERS **/'
+            }[scriptType],
+            exposeId: {
+                'JS': '%PLUGINID%',
+                'HANDLERS': '%PLUGINID%-handlers',
+                'CLOBBERS': '%PLUGINID%-clobbers'
+            }[scriptType],
+            fileName: PLUGIN_SIMULATION_FILES[hostType][scriptType],
+            code: []
+        };
+    });
+}
+
+function streamSimulatorJs2(filePath, request, response) {
+    streamHostJsFile(filePath, request, response, 'SIM_HOST', ['JS', 'HANDLERS']);
+}
+
+
+function streamAppHostJs(filePath, request, response) {
+    streamHostJsFile(filePath, request, response, 'APP_HOST', ['JS', 'HANDLERS', 'CLOBBERS']);
+}
+
+function streamHostJsFile(filePath, request, response, hostType, scriptTypes) {
+    var scriptDefs = createScriptDefs(hostType, scriptTypes);
 
     var b = browserify({paths: getBrowserifySearchPaths()});
     b.transform(function (file) {
         if (file === filePath) {
-            var data = '';
-            return through2(function (buf, encoding, cb) {
+            var data = ''; return through2(function (buf, encoding, cb) {
                 data += buf;
                 cb();
             }, function (cb) {
-                data = data
-                    .replace('/** PLUGINS **/', pluginCode.join(',\n'))
-                    .replace('/** PLUGIN-HANDLERS **/', pluginHandlers.join(',\n'))
-                    .replace('/** PLUGIN-CLOBBERS **/', pluginClobbers.join(',\n'));
+                data = scriptDefs.reduce(function (previousData, scriptDef) {
+                    return previousData.replace(scriptDef.comment, scriptDef.code.join(',\n'));
+                }, data);
                 this.push(data);
                 cb();
             });
@@ -383,38 +421,17 @@ function streamAppHost(filePath, request, response) {
     var pluginTemplate = '\'%PLUGINID%\': require(\'%EXPOSEID%\')';
     pluginList.forEach(function (pluginId) {
         var pluginPath = pluginPaths[pluginId];
-
-        // If this plugin defines app-host code, include it
-        var pluginAppHostScriptFile = pluginPath && path.join(pluginPath, PLUGIN_SIMULATION_FILES.APP_HOST_JS);
-        if (pluginAppHostScriptFile && fs.existsSync(pluginAppHostScriptFile)) {
-            pluginCode.push(pluginTemplate
-                .replace(/%PLUGINID%/g, pluginId)
-                .replace(/%EXPOSEID%/g, pluginId)
-                .replace(/%PLUGINPATH%/g, pluginAppHostScriptFile.replace(/\\/g, '\\\\')));
-            b.require(pluginAppHostScriptFile, {expose: pluginId});
-        }
-
-        // If this plugin defines handlers for exec calls, include them
-        var exposeId;
-        var pluginAppHostHandlerFile = pluginPath && path.join(pluginPath, PLUGIN_SIMULATION_FILES.APP_HOST_HANDLERS);
-        if (pluginAppHostHandlerFile && fs.existsSync(pluginAppHostHandlerFile)) {
-            exposeId = pluginId + '-handlers';
-            pluginHandlers.push(pluginTemplate
-                .replace(/%PLUGINID%/g, pluginId)
-                .replace(/%EXPOSEID%/g, exposeId)
-                .replace(/%PLUGINPATH%/g, pluginAppHostHandlerFile.replace(/\\/g, '\\\\')));
-            b.require(pluginAppHostHandlerFile, {expose: exposeId});
-        }
-
-        // If this plugin defines objects that should be clobbered, include them
-        var pluginAppHostClobberFile = pluginPath && path.join(pluginPath, PLUGIN_SIMULATION_FILES.APP_HOST_CLOBBERS);
-        if (pluginAppHostClobberFile && fs.existsSync(pluginAppHostClobberFile)) {
-            exposeId = pluginId + '-clobbers';
-            pluginClobbers.push(pluginTemplate
-                .replace(/%PLUGINID%/g, pluginId)
-                .replace(/%EXPOSEID%/g, exposeId)
-                .replace(/%PLUGINPATH%/g, pluginAppHostClobberFile.replace(/\\/g, '\\\\')));
-            b.require(pluginAppHostClobberFile, {expose: exposeId});
+        if (pluginPath) {
+            scriptDefs.forEach(function (scriptDef) {
+                var pluginScriptFile = path.join(pluginPath, scriptDef.fileName);
+                if (fs.existsSync(pluginScriptFile)) {
+                    var exposeId = scriptDef.exposeId.replace(/%PLUGINID%/g, pluginId);
+                    scriptDef.code.push(pluginTemplate
+                        .replace(/%PLUGINID%/g, pluginId)
+                        .replace(/%EXPOSEID%/g, exposeId));
+                    b.require(pluginScriptFile, {expose: exposeId});
+                }
+            });
         }
     });
 

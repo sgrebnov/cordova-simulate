@@ -59,7 +59,7 @@ socket.emit('register-app-host');
 
 function exec(success, fail, service, action, args) {
     // If we have a local handler, call that. Otherwise pass it to the simulation host.
-    var handler = pluginHandlers[service + '.' + action];
+    var handler = pluginHandlers[service] && pluginHandlers[service][action];
     if (handler) {
         handler(success, fail, service, action, args);
     } else {

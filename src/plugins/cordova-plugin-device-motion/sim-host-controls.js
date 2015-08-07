@@ -98,8 +98,6 @@ var recordedGestures = [
     }
 ];
 
-var accelerometerHandle = null;
-
 function initialize() {
     axisX = document.getElementById('accel-x');
     axisY = document.getElementById('accel-y');
@@ -125,27 +123,6 @@ function initialize() {
     });
 }
 
-function start(win, lose) {
-    accelerometerHandle = setInterval(function() {
-        win(getCurrentAcceleration());
-    }, ACCELEROMETER_REPORT_INTERVAL);
-}
-
-function stop(win, lose) {
-    if (accelerometerHandle === null) {
-        return;
-    }
-
-    clearInterval(accelerometerHandle);
-    accelerometerHandle = null;
-}
-
-cordova.registerPluginHandlers({
-    'Accelerometer.start': start,
-    'Accelerometer.stop': stop,
-    'Accelerometer.getCurrentAcceleration': getCurrentAccelerationHandle
-    });
-
 function setToDefaultPosition() {
      var accel = {x: 0, y: 0, z: -1, alpha: 0, beta: 0, gamma: 0 };
 
@@ -164,23 +141,10 @@ function setToDefaultPosition() {
     _offsets = {
         x: accel.x,
         y: accel.y,
-        z: accel.z,
+        z: accel.z
     };
 
     updateCanvas(0,0);
-}
-
-function getCurrentAcceleration () {
-    return {
-         x: parseFloat(axisX.value),
-         y: parseFloat(axisY.value),
-         z: parseFloat(axisZ.value),
-         timestamp: (new Date()).getTime()
-    };
-}
-
-function getCurrentAccelerationHandle (win, lose) {
-    win(getCurrentAcceleration());
 }
 
 function shake() {
@@ -211,6 +175,16 @@ function shake() {
 
 module.exports = {
     initialize: initialize,
+    ACCELEROMETER_REPORT_INTERVAL: ACCELEROMETER_REPORT_INTERVAL,
+    get x() {
+        return parseFloat(axisX.value);
+    },
+    get y() {
+        return parseFloat(axisY.value);
+    },
+    get z() {
+        return parseFloat(axisZ.value);
+    }
 };
 
 function updateCanvasCenter(xAxis, yAxis) {

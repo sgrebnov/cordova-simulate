@@ -23,7 +23,6 @@
 <html>
 <head>
     <script src="OpenLayers.js"></script>
-    <script src="sim-host-controls.js"></script>
     <link href="sim-host-controls.css" rel="stylesheet"/>
 </head>
 <body>
@@ -59,8 +58,8 @@
     </cordova-panel-row>
 
     <cordova-panel-row>
-        <cordova-button id="geo-gpxfile-button" onclick="document.getElementById('geo-gpxfile').input.click()" style="width:100%">Choose File</cordova-button>
-        <cordova-file hidden="true" id="geo-gpxfile" onchange="document.getElementById('geo-gpxfile-button').textContent=this.files[0].name"></cordova-file>
+        <cordova-button id="geo-gpxfile-button" style="width:100%">Choose File</cordova-button>
+        <cordova-file hidden="true" id="geo-gpxfile"></cordova-file>
     </cordova-panel-row>
 
     <cordova-panel-row>

@@ -1,53 +1,38 @@
-var cordova = require('cordova');
-
-var _success, _fail;
-
-function handleTakePicture(success, fail, service, action, args) {
-    _success = success;
-    _fail = fail;
-    if (document.getElementById('camera-host').checked) {
-        window.alert('Not supported');
-    } else if (document.getElementById('camera-prompt').checked) {
-        cordova.showDialog('camera-choose-image');
-    } else if (document.getElementById('camera-sample').checked) {
-        window.alert('Not supported');
-    } else if (document.getElementById('camera-file').checked) {
-        var url = URL.createObjectURL(document.getElementById('camera-filename').files[0]);
-        success(url);
-    }
-}
-
-function updateImage() {
-    var url = URL.createObjectURL(document.getElementById('camera-filename').files[0]);
-    var img = document.getElementById('img');
-    img.src = url;
-    img.style.display = null;
-}
-
-function updateDialogImage() {
-    var url = URL.createObjectURL(document.getElementById('camera-dialog-filename').files[0]);
-    var img = document.getElementById('dialog-image');
-    img.src = url;
-    img.style.display = null;
-    document.getElementById('camera-use-image').style.display = 'initial';
-}
-
-function cancelDialog() {
-    cordova.hideDialog('camera-choose-image');
-    _success(null);
-}
-
-function useImage() {
-    cordova.hideDialog('camera-choose-image');
-    var url = document.getElementById('dialog-image').src;
-    _success(url);
-}
-
-cordova.registerPluginHandlers({'Camera.takePicture': handleTakePicture});
+/*
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * 'License'); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ *
+ */
 
 module.exports = {
-    updateImage: updateImage,
-    updateDialogImage: updateDialogImage,
-    cancelDialog: cancelDialog,
-    useImage: useImage
+    initialize: function () {
+        var filenameInput = document.getElementById('camera-filename');
+
+        document.getElementById('camera-choose-filename').addEventListener('click', function () {
+            filenameInput.input.click();
+        });
+
+        filenameInput.addEventListener('change', function () {
+            console.log('CHANGE EVENT');
+            var url = URL.createObjectURL(filenameInput.files[0]);
+            var img = document.getElementById('camera-img');
+            img.src = url;
+            img.style.display = null;
+        });
+    }
 };

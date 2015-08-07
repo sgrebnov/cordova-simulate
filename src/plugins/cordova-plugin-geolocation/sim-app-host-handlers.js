@@ -31,7 +31,7 @@ module.exports = function (messages) {
             "accuracy": 150,
             "altitudeAccuracy": 80,
             "heading": 0,
-            "velocity": 0,
+            "velocity": 0
         };
 
     function _getCurrentPosition(win, fail) {

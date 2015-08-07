@@ -9,22 +9,20 @@ module.exports = function(messages) {
             option.appendChild(caption);
             eventList.appendChild(option);
         });
-    }
-
-    function fireEvent() {
-        var eventList = document.getElementById('event-list');
-        var option = eventList.options[eventList.selectedIndex];
-        messages.emit('event', option.value, function (result, err) {
-            if (err) {
-                window.alert('Firing event failed: ' + err);
-            } else {
-                window.alert('Fired event: ' + result);
-            }
+        document.getElementById('event-fire').addEventListener('click', function () {
+            var eventList = document.getElementById('event-list');
+            var option = eventList.options[eventList.selectedIndex];
+            messages.emit('event', option.value, function (result, err) {
+                if (err) {
+                    console.log('Firing event failed: ' + err);
+                } else {
+                    console.log('Fired event: ' + result);
+                }
+            });
         });
     }
 
     return {
-        initialize: initialize,
-        fireEvent: fireEvent
+        initialize: initialize
     };
 };

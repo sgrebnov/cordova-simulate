@@ -18,10 +18,6 @@
  * under the License.
  *
  */
- 
-// https://github.com/apache/cordova-plugin-vibration/
-
-var cordova = require('cordova');
 
 module.exports = function (messages) {
     function handleVibration(success, fail, service, action, args) {
@@ -58,10 +54,11 @@ module.exports = function (messages) {
         });
     }
 
-    cordova.registerPluginHandlers(
-    {
-        'Vibration.vibrate': handleVibration,
-        'Vibration.vibrateWithPattern': handleVibrationWithPattern,
-        'Vibration.cancelVibration': handleCancelVibration
-    });
+    return {
+        'Vibration': {
+            'vibrate': handleVibration,
+            'vibrateWithPattern': handleVibrationWithPattern,
+            'cancelVibration': handleCancelVibration
+        }
+    };
 };

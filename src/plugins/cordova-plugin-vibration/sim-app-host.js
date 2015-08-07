@@ -27,7 +27,7 @@ module.exports = function (messages) {
     var vibrationCanceled = false;
 
     // represents index of the vibration pattern array 
-    var currenntVibrationWithPatternIndex;
+    var currentVibrationWithPatternIndex;
 
     // indicates whether we will need to stop vibration effect or not
     var currentVibrationNum = 0;
@@ -52,7 +52,7 @@ module.exports = function (messages) {
         }
 
         var pattern = event[0];
-        currenntVibrationWithPatternIndex = 0;
+        currentVibrationWithPatternIndex = 0;
         console.log('vibrating with pattern ' + pattern);
         currentVibrationNum++;
         vibrateWithPattern(pattern, currentVibrationNum);
@@ -151,18 +151,18 @@ module.exports = function (messages) {
             return Q();
         }
 
-        var milliseconds = pattern[currenntVibrationWithPatternIndex];
+        var milliseconds = pattern[currentVibrationWithPatternIndex];
         if (milliseconds) {
-            if (currenntVibrationWithPatternIndex % 2 === 0) {
+            if (currentVibrationWithPatternIndex % 2 === 0) {
                 console.log('vibrating...' + milliseconds);
-                currenntVibrationWithPatternIndex++;
+                currentVibrationWithPatternIndex++;
                 return vibrate(milliseconds, placeholderNum)
                     .then(function () { 
                         return vibrateWithPattern(pattern, placeholderNum);
                     });
             } else {
                 console.log('delaying...' + milliseconds);
-                currenntVibrationWithPatternIndex++;
+                currentVibrationWithPatternIndex++;
                 return Q()
                     .delay(milliseconds)
                     .then(function () { 

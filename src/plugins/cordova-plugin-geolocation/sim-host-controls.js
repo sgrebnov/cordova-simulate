@@ -429,12 +429,22 @@ module.exports = function(messages) {
                 updateGeo();
             });
 
-            document.querySelector('#' + GEO_OPTIONS.GPXFILE).addEventListener('change', function () {
+            var gpxFileLoader = document.querySelector('#' + GEO_OPTIONS.GPXFILE);
+            var gpxFileButton = document.querySelector('#geo-gpxfile-button');
+            gpxFileButton.addEventListener('click', function () {
+                gpxFileLoader.click();
+            });
+            gpxFileLoader.addEventListener('change', function () {
                 // It is possible to have no file selected and still get a change event.
                 // You do this by selecting something, then selecting nothing.
                 // You select nothing by cancelling out of the file picker dialog.
                 var selectedFiles = this.files;
-                if (selectedFiles.length > 0) loadGpxFile(selectedFiles[0]);
+                if (selectedFiles.length > 0) {
+                    loadGpxFile(selectedFiles[0]);
+                    gpxFileButton.textContent = selectedFiles[0].name;
+                } else {
+                    gpxFileButton.textContent = 'Choose File';
+                }
             });
 
             document.querySelector('#' + GEO_OPTIONS.GPXGO).addEventListener('click', function () {

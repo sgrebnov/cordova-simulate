@@ -18,7 +18,6 @@
  * under the License.
  *
  */
-var _console = require('console');
 
 function _getStack(depth) {
     var caller,
@@ -67,7 +66,7 @@ module.exports = {
         var eMsg = exception.message || 'exception caught!',
             msg = eMsg + '\n\n' + (exception.stack || '*no stack provided*') + '\n\n';
 
-        _console.error(msg);
+        console.error(msg);
 
         if (reThrow) {
             throw exception;

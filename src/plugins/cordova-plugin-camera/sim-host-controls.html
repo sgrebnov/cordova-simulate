@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="sim-host-controls.js"></script>
 </head>
 <body>
 <!-- Panels -->
@@ -12,24 +11,23 @@
         <cordova-radio id="camera-sample">Use built-in sample file</cordova-radio>
         <cordova-panel-row>
             <cordova-radio id="camera-file" inline="true">Use this file:</cordova-radio>
-            <cordova-button onclick="document.getElementById('camera-filename').input.click()">Choose File
+            <cordova-button id="camera-choose-filename">Choose File
             </cordova-button>
         </cordova-panel-row>
-        <cordova-file hidden="true" id="camera-filename" onchange="updateImage()"></cordova-file>
-        <img id="img" style="width: 100%; margin-top: 10px; display: none;" src="">
+        <cordova-file hidden="true" id="camera-filename"></cordova-file>
+        <img id="camera-img" style="width: 100%; margin-top: 10px; display: none;" src="">
     </cordova-group>
 </cordova-panel>
 
 <!-- Dialogs -->
 <cordova-dialog id="camera-choose-image" caption="Camera: Choose Image">
-    <section><img id="dialog-image" style="width:100%; display: none;" src=""></section>
+    <section><img id="camera-dialog-image" style="width:100%; display: none;" src=""></section>
     <cordova-panel-row>
-        <cordova-button onclick="document.getElementById('camera-dialog-filename').input.click()">Choose File
-        </cordova-button>
-        <cordova-button id="camera-use-image" style="display: none;" onclick="useImage()">Use Image</cordova-button>
-        <cordova-button onclick="cancelDialog()">Cancel</cordova-button>
+        <cordova-button id="camera-dialog-choose-filename">Choose File</cordova-button>
+        <cordova-button id="camera-dialog-use-image" style="display: none;">Use Image</cordova-button>
+        <cordova-button id="camera-dialog-cancel">Cancel</cordova-button>
     </cordova-panel-row>
-    <cordova-file hidden="true" id="camera-dialog-filename" onchange="updateDialogImage()"></cordova-file>
+    <cordova-file hidden="true" id="camera-dialog-filename"></cordova-file>
 </cordova-dialog>
 </body>
 </html>

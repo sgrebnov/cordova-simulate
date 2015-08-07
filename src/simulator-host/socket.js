@@ -2,9 +2,7 @@ var cordova = require('cordova');
 
 var socket;
 
-module.exports.initialize = function () {
-    console.log('socket.initialize()');
-
+module.exports.initialize = function (pluginHandlers) {
     socket = io();
     module.exports.socket = socket;
 
@@ -34,12 +32,9 @@ module.exports.initialize = function () {
             throw 'Exec called on simulation host without an action specified';
         }
 
-        var handlerId = service + '.' + action;
-        console.log('cordova.pluginHandlers');
-        console.log(cordova.pluginHandlers);
-        var handler = cordova.pluginHandlers[handlerId];
+        var handler = pluginHandlers[service] && pluginHandlers[service][action];
         if (!handler) {
-            handler = cordova.pluginHandlers['*.*'];
+            handler = pluginHandlers['*']['*'];
         }
         handler(success, failure, service, action, data.args);
     });

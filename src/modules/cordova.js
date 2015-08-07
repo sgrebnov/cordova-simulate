@@ -1,9 +1,7 @@
-var pluginHandlers = {},
-    pluginDialogs  = {};
+var pluginDialogs  = {};
 
 var currentDialogId = null;
 
-module.exports.pluginHandlers = pluginHandlers;
 module.exports.pluginDialogs = pluginDialogs;
 
 function showDialog(dialogId) {
@@ -38,12 +36,3 @@ function hideDialog(dialogId) {
     dialog.style.display = 'none';
 }
 module.exports.hideDialog = hideDialog;
-
-function registerPluginHandlers(handlers) {
-    for (var handlerId in handlers) {
-        if (handlers.hasOwnProperty(handlerId)) {
-            pluginHandlers[handlerId] = handlers[handlerId];
-        }
-    }
-}
-module.exports.registerPluginHandlers = registerPluginHandlers;
