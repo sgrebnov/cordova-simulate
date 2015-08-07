@@ -21,7 +21,8 @@
  
 // https://github.com/apache/cordova-plugin-device-motion/
 
-var cordova = require('cordova');
+require('./3d');
+require('./draw');
 
 var axisX,
     axisY,

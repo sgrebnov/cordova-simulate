@@ -20,14 +20,11 @@
 -->
 
 <!-- Panels -->
-<!DOCTYPE html>
-<html>
-<head>
-</head>
-<body>
 <cordova-panel id="exec-panel" caption="Persisted Exec Calls">
     <cordova-item-list id="exec-list" max-length="10"></cordova-item-list>
 </cordova-panel>
+
+<!-- Dialogs -->
 <cordova-dialog id="exec-dialog" caption="Unhandled Exec Call">
     <cordova-group>
         <p>There is no handler for the following exec call:</p>
@@ -39,7 +36,6 @@
         <textarea id="exec-response" rows="10" style="width:100%" class="cordova-widget cordova-state-default"></textarea></textarea>
         <div class="p" id="exec-error" style="color: red;">The value must be valid JSON (<span style="font-style:italic;" id="exec-parse-error">error</span>)</div>
     </cordova-group>
-    <!--<cordova-group id="exec-error"><p style="color: red;">The value must be valid JSON (<span style="font-style:italic;" id="exec-parse-error">error</span>)</p></cordova-group>-->
     <cordova-panel-row>
         <cordova-checkbox id="exec-persist">Persist</cordova-checkbox>
         <cordova-group>
@@ -48,5 +44,3 @@
         </cordova-group>
     </cordova-panel-row>
 </cordova-dialog>
-</body>
-</html>

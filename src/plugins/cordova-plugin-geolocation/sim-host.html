@@ -19,13 +19,10 @@
  *
 -->
 
-<!DOCTYPE html>
-<html>
-<head>
-    <script src="OpenLayers.js"></script>
-    <link href="sim-host.css" rel="stylesheet"/>
-</head>
-<body>
+<!-- Include OpenLayers here rather than require'ing it, since it doesn't expose global variables when require'd -->
+<script src="OpenLayers.js"></script>
+<link href="sim-host.css" rel="stylesheet"/>
+
 <!-- Panels -->
 <cordova-panel id="geolocation" caption="Geolocation">
     <style>
@@ -104,5 +101,3 @@
         </section>
     </cordova-panel-row>
 </cordova-panel>
-</body>
-</html>
