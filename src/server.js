@@ -70,8 +70,12 @@ function init(server, root) {
                 emitToSimulationHost('plugin-info', data);
             });
 
-            socket.on('plugin-message', function (data, callback) {
-                emitToSimulationHost('plugin-message', data, callback);
+            socket.on('plugin-message', function (data) {
+                emitToSimulationHost('plugin-message', data);
+            });
+
+            socket.on('plugin-method', function (data, callback) {
+                emitToSimulationHost('plugin-method', data, callback);
             });
         });
 
@@ -93,8 +97,12 @@ function init(server, root) {
                 emitToAppHost('request-plugin-info', data, callback);
             });
 
-            socket.on('plugin-message', function (data, callback) {
-                emitToAppHost('plugin-message', data, callback);
+            socket.on('plugin-message', function (data) {
+                emitToAppHost('plugin-message', data);
+            });
+
+            socket.on('plugin-method', function (data, callback) {
+                emitToAppHost('plugin-method', data, callback);
             });
 
             socket.on('get-plugin-list', function (data, callback) {

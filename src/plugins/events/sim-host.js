@@ -33,12 +33,10 @@ module.exports = function(messages) {
         document.getElementById('event-fire').addEventListener('click', function () {
             var eventList = document.getElementById('event-list');
             var option = eventList.options[eventList.selectedIndex];
-            messages.emit('event', option.value, function (result, err) {
-                if (err) {
-                    console.log('Firing event failed: ' + err);
-                } else {
-                    console.log('Fired event: ' + result);
-                }
+            messages.call('event', option.value).then(function (result) {
+                console.log('Fired event: ' + result);
+            }, function (err) {
+                console.log('Firing event failed: ' + err);
             });
         });
     }

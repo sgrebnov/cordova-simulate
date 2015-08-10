@@ -23,34 +23,28 @@ module.exports = function (messages) {
     function handleVibration(success, fail, service, action, args) {
         console.log('"' + service + '" "' + action + '" called with args "' + args + '"');
         var ms = args[0];
-        messages.emit('vibrate', ms, function (result, err) {
-            if (err) {
-                throw new Error('Vibration failed: ' + err);
-            } else {
-                console.log('Vibrating for ' + ms + ' milliseconds');
-            }
+        messages.call('vibrate', ms).then(function () {
+            console.log('Vibrating for ' + ms + ' milliseconds');
+        }, function (err) {
+            throw new Error('Vibration failed: ' + err);
         });
     }
 
     function handleVibrationWithPattern(success, fail, service, action, args) {
         console.log('"' + service + '" "' + action + '" called with args "' + args + '"');
-        messages.emit('vibrateWithPattern', args, function (result, err) {
-            if (err) {
-                throw new Error('Vibration with pattern failed: ' + err);
-            } else {
-                console.log('Vibrating with pattern - ' +args);
-            }
+        messages.call('vibrateWithPattern', args).then(function () {
+            console.log('Vibrating with pattern - ' +args);
+        }, function (err) {
+            throw new Error('Vibration with pattern failed: ' + err);
         });
     }
 
     function handleCancelVibration(success, fail, service, action, args) {
         console.log('"' + service + '" "' + action + '" called');
-        messages.emit('cancelVibration', 'cancelVibration', function (result, err) {
-            if (err) {
-                throw new Error('Cancel vibration failed: ' + err);
-            } else {
-                console.log('Cancelling vibration');
-            }
+        messages.call('cancelVibration', 'cancelVibration').then(function () {
+            console.log('Cancelling vibration');
+        }, function (err) {
+            throw new Error('Cancel vibration failed: ' + err);
         });
     }
 

@@ -32,9 +32,9 @@ module.exports = function (messages) {
     // indicates whether we will need to stop vibration effect or not
     var currentVibrationNum = 0;
 
-    messages.on('vibrate', function (message, event, callback) {
+    messages.register('vibrate', function (event, callback) {
         if (!window.navigator && !window.navigator.vibrate) {
-            callback(null, 'navigator.vibrate is not defined');
+            callback('navigator.vibrate is not defined');
         }
 
         var ms = parseInt(event, 10);
@@ -45,9 +45,9 @@ module.exports = function (messages) {
         callback();
     });
 
-    messages.on('vibrateWithPattern', function (message, event, callback) {
+    messages.register('vibrateWithPattern', function (event, callback) {
         if (!window.navigator && !window.navigator.vibrate) {
-            callback(null, 'navigator.vibrate is not defined');
+            callback('navigator.vibrate is not defined');
             return;
         }
 
@@ -60,15 +60,15 @@ module.exports = function (messages) {
         callback();
     });
 
-    messages.on('cancelVibration', function (message, event, callback) {
+    messages.register('cancelVibration', function (event, callback) {
         if (!window.navigator && !window.navigator.vibrate) {
-            callback(null, 'navigator.vibrate is not defined');
+            callback('navigator.vibrate is not defined');
             return;
         }
 
         // cancelVibration is not supported on ios
         if (window.cordova && window.cordova.platformId === 'ios') {
-            callback(null, 'Not supported on iOS');
+            callback('Not supported on iOS');
             throw new Error('Not supported on iOS');
         }
 
