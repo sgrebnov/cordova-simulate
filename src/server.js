@@ -31,7 +31,8 @@ var pluginPaths = [],
 
 var PLUGIN_SIMULATION_FILES = {
     'SIM_HOST': {
-        'HTML': 'sim-host.html',
+        'PANELS': 'sim-host-panels.html',
+        'DIALOGS': 'sim-host-dialogs.html',
         'JS': 'sim-host.js',
         'HANDLERS': 'sim-host-handlers.js'
     },
@@ -66,10 +67,6 @@ function init(server, root) {
                 emitToSimulationHost('exec', data);
             });
 
-            socket.on('plugin-info', function (data) {
-                emitToSimulationHost('plugin-info', data);
-            });
-
             socket.on('plugin-message', function (data) {
                 emitToSimulationHost('plugin-message', data);
             });
@@ -93,42 +90,12 @@ function init(server, root) {
                 emitToAppHost('exec-failure', data);
             });
 
-            socket.on('request-plugin-info', function (data, callback) {
-                emitToAppHost('request-plugin-info', data, callback);
-            });
-
             socket.on('plugin-message', function (data) {
                 emitToAppHost('plugin-message', data);
             });
 
             socket.on('plugin-method', function (data, callback) {
                 emitToAppHost('plugin-method', data, callback);
-            });
-
-            socket.on('get-plugin-list', function (data, callback) {
-                callback(pluginList);
-            });
-
-            socket.on('get-plugin-info', function (pluginId, callback) {
-                var pluginHtmlFileName = PLUGIN_SIMULATION_FILES.SIM_HOST.HTML;
-                var pluginPath = pluginPaths[pluginId];
-                var pluginFilePath = pluginPath && path.join(pluginPath, pluginHtmlFileName);
-
-                // We provide an href for the simulation host to use when processing this html (for resolving script and
-                // img references, for example).
-                var href = 'plugin/' + pluginId + '/' + pluginHtmlFileName;
-                var returnValue = {href: href, html: ''};
-
-                if (fs.existsSync(pluginFilePath)) {
-                    fs.readFile(pluginFilePath, 'utf8', function (err, html) {
-                        if (!err) {
-                            returnValue.html = html;
-                        }
-                        callback(returnValue);
-                    });
-                } else {
-                    callback(returnValue);
-                }
             });
         });
     });
@@ -285,17 +252,24 @@ function streamFile(filePath, request, response) {
             .pipe(replaceStream('default-src \'self\'', 'default-src \'self\' ws:')), true);
         return true;
     }
+
     if (request.url === '/simulator/app-host/app-host.js') {
         streamAppHostJs(filePath, request, response);
         return true;
     }
+
     if (request.url === '/simulator/index.html' || request.url === '/simulator/simulate.html') {
         streamSimulator(filePath, request, response);
         return true;
     }
 
     if (request.url === '/simulator/simulate.js') {
-        streamSimulatorJs2(filePath, request, response);
+        streamSimulatorJs(filePath, request, response);
+        return true;
+    }
+
+    if (request.url === '/simulator/simulate.css' && request.headers['user-agent'].indexOf('Chrome') === -1) {
+        streamSimulatorCss(filePath, request, response);
         return true;
     }
 
@@ -344,32 +318,50 @@ function streamPluginSimHostJs(filePath, pluginId, request, response) {
     server.sendStream(filePath, request, response, bundle, true);
 }
 
-function streamSimulatorJs(filePath, request, response) {
-    var b = browserify({paths: getBrowserifySearchPaths()});
-    b.add(filePath);
-
-    // Include common modules
-    getCommonModules().forEach(function (module) {
-        b.require(module.file, {expose: module.name});
-    });
-
-    var bundle = b.bundle();
-    server.sendStream(filePath, request, response, bundle, true);
-}
-
 function streamSimulator(filePath, request, response) {
     // Inject references to simulation HTML files
-    var simHostHtmlBasename = PLUGIN_SIMULATION_FILES.SIM_HOST.HTML;
-    var pluginHtml = [];
+    var panelsHtmlBasename = PLUGIN_SIMULATION_FILES.SIM_HOST.PANELS;
+    var dialogsHtmlBasename = PLUGIN_SIMULATION_FILES.SIM_HOST.DIALOGS;
+    var panelsHtml = [];
+    var dialogsHtml = [];
     var pluginLinkTemplate = '<link id="%PLUGINID%-import" rel="import" href="plugin/%PLUGINID%/sim-host.html">';
     pluginList.forEach(function (pluginId) {
         var pluginPath = pluginPaths[pluginId];
-        var pluginSimHostHtmlFile = pluginPath && path.join(pluginPath, simHostHtmlBasename);
-        if (pluginSimHostHtmlFile && fs.existsSync(pluginSimHostHtmlFile)) {
-            pluginHtml.push(pluginLinkTemplate.replace(/%PLUGINID%/g, pluginId));
+        if (pluginPath) {
+            var panelsHtmlFile = path.join(pluginPath, panelsHtmlBasename);
+            if (fs.existsSync(panelsHtmlFile)) {
+                panelsHtml.push(processPluginHtml(fs.readFileSync(panelsHtmlFile, 'utf8'), pluginId));
+            }
+
+            var dialogsHtmlFile = path.join(pluginPath, dialogsHtmlBasename);
+            if (fs.existsSync(dialogsHtmlFile)) {
+                dialogsHtml.push(processPluginHtml(fs.readFileSync(dialogsHtmlFile, 'utf8'), pluginId));
+            }
+
         }
+
     });
-    server.sendStream(filePath, request, response, fs.createReadStream(filePath).pipe(replaceStream(/<\/\s*head\s*>/, pluginHtml.join('\n') + '</head>')), true);
+    server.sendStream(filePath, request, response, fs.createReadStream(filePath)
+        .pipe(replaceStream('<!-- PANELS -->', panelsHtml.join('\n')))
+        .pipe(replaceStream('<!-- DIALOGS -->', dialogsHtml.join('\n'))), true);
+}
+
+function processPluginHtml(html, pluginId) {
+    return [/<script[^>]*src\s*=\s*"([^"]*)"[^>]*>/g, /<link[^>]*href\s*=\s*"([^"]*)"[^>]*>/g].reduce(function (result, regex) {
+        // Ensures plugin path is prefixed to source of any script and link tags
+        return result.replace(regex, function (match, p1) {
+            return match.replace(p1, 'plugin/' + pluginId + '/' + p1.trim());
+        });
+    }, html).replace(/<!\-\-(.|\s)*?\-\->(\s)*/g, function () {
+        // Remove comments
+        return '';
+    });
+}
+
+function streamSimulatorCss(filePath, request, response) {
+    // Replace /deep/ combinator
+    server.sendStream(filePath, request, response, fs.createReadStream(filePath)
+        .pipe(replaceStream(/\^|\/shadow\/|\/shadow-deep\/|::shadow|\/deep\/|::content|>>>/g, ' ')), true);
 }
 
 function createScriptDefs(hostType, scriptTypes) {
@@ -391,10 +383,9 @@ function createScriptDefs(hostType, scriptTypes) {
     });
 }
 
-function streamSimulatorJs2(filePath, request, response) {
+function streamSimulatorJs(filePath, request, response) {
     streamHostJsFile(filePath, request, response, 'SIM_HOST', ['JS', 'HANDLERS']);
 }
-
 
 function streamAppHostJs(filePath, request, response) {
     streamHostJsFile(filePath, request, response, 'APP_HOST', ['JS', 'HANDLERS', 'CLOBBERS']);

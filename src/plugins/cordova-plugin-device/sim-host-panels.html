@@ -19,8 +19,11 @@
  *
 -->
 
-<!-- Panels -->
-<cordova-panel id="events" caption="Events">
-    <cordova-combo id="event-list" label="Select the event to fire:"></cordova-combo>
-    <cordova-panel-row><cordova-button id="event-fire">Fire Event</cordova-button></cordova-panel-row>
+<cordova-panel id="device" caption="Device">
+    <cordova-group><cordova-panel-row><cordova-label label="Predefined Devices"></cordova-label></cordova-panel-row>
+    <cordova-combo id="device-list"></cordova-combo></cordova-group>
+    <cordova-text-entry label="Model" id="device-model"></cordova-text-entry>
+    <cordova-text-entry label="Platform" id="device-platform"></cordova-text-entry>
+    <cordova-text-entry label="UUID" id="device-uuid"></cordova-text-entry>
+    <cordova-text-entry label="Version" id="device-version"></cordova-text-entry>
 </cordova-panel>
