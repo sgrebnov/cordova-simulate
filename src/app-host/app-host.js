@@ -20,11 +20,13 @@ function setCordova(originalCordova) {
         module.exports = exec;
     });
 
-    // android platform has its own specific initialization
-    // so to emulate it, we need to fake init function
+    // bootstrap logic on android performs several calls to native side
+    // which are not required when we do simulation; so we override
+    // bootstrap function with simple implementation so we don't need to 
+    // write proxy handlers for them ('messageChannel', 'show', etc)
     if (cordova.platformId === 'android') {
-        exec.init = function () { 
-            cordova.require('cordova/channel').onNativeReady.fire(); 
+        cordova.require('cordova/platform').bootstrap = function () {
+            cordova.require('cordova/channel').onNativeReady.fire();
         };
     }
 
