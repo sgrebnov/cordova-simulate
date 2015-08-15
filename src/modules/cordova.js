@@ -16,8 +16,8 @@ function showDialog(dialogId) {
     }
 
     currentDialogId = dialogId;
-    document.getElementById('popup-window').style.display = null;
-    dialog.style.display = null;
+    document.getElementById('popup-window').style.display = '';
+    dialog.style.display = '';
 }
 module.exports.showDialog = showDialog;
 

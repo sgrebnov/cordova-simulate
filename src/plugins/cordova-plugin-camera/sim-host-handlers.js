@@ -45,8 +45,8 @@ module.exports = {
                 };
                 filenameInput.onchange = function () {
                     img.src = URL.createObjectURL(filenameInput.files[0]);
-                    img.style.display = null;
-                    document.getElementById('camera-dialog-use-image').style.display = 'initial';
+                    img.style.display = '';
+                    document.getElementById('camera-dialog-use-image').style.display = '';
                 };
 
                 cordova.showDialog('camera-choose-image');

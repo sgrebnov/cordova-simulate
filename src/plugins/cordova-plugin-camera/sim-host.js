@@ -32,7 +32,7 @@ module.exports = {
             var url = URL.createObjectURL(filenameInput.files[0]);
             var img = document.getElementById('camera-img');
             img.src = url;
-            img.style.display = null;
+            img.style.display = '';
         });
     }
 };
