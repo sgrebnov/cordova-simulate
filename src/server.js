@@ -49,8 +49,11 @@ function init(server, root) {
     this.server = server;
     this.io = io;
 
-    var app_host_socket;
-    var simulation_host_socket;
+    var hostSockets = {};
+    var pendingEmits = {
+        'APP-HOST': [],
+        'SIM-HOST': []
+    };
 
     initPluginList();
     initPluginPaths();
@@ -61,19 +64,21 @@ function init(server, root) {
 
             // It only makes sense to have one app host per server. If more than one tries to connect, always take the
             // most recent.
-            app_host_socket = socket;
+            hostSockets['APP-HOST'] = socket;
 
             socket.on('exec', function (data) {
-                emitToSimulationHost('exec', data);
+                emitToHost('SIM-HOST', 'exec', data);
             });
 
             socket.on('plugin-message', function (data) {
-                emitToSimulationHost('plugin-message', data);
+                emitToHost('SIM-HOST', 'plugin-message', data);
             });
 
             socket.on('plugin-method', function (data, callback) {
-                emitToSimulationHost('plugin-method', data, callback);
+                emitToHost('SIM-HOST', 'plugin-method', data, callback);
             });
+
+            handlePendingEmits('APP-HOST');
         });
 
         socket.on('register-simulation-host', function () {
@@ -81,38 +86,43 @@ function init(server, root) {
 
             // It only makes sense to have one simulation host per server. If more than one tries to connect, always
             // take the most recent.
-            simulation_host_socket = socket;
+            hostSockets['SIM-HOST'] = socket;
 
             socket.on('exec-success', function (data) {
-                emitToAppHost('exec-success', data);
+                emitToHost('APP-HOST', 'exec-success', data);
             });
             socket.on('exec-failure', function (data) {
-                emitToAppHost('exec-failure', data);
+                emitToHost('APP-HOST', 'exec-failure', data);
             });
 
             socket.on('plugin-message', function (data) {
-                emitToAppHost('plugin-message', data);
+                emitToHost('APP-HOST', 'plugin-message', data);
             });
 
             socket.on('plugin-method', function (data, callback) {
-                emitToAppHost('plugin-method', data, callback);
+                emitToHost('APP-HOST', 'plugin-method', data, callback);
             });
+
+            handlePendingEmits('SIM-HOST');
         });
     });
 
-    function emitToSimulationHost(msg, data, callback) {
-        console.log('APP-HOST to SIM-HOST: ' + msg);
-        emitToHosts(simulation_host_socket, msg, data, callback);
+    function handlePendingEmits(host) {
+        pendingEmits[host].forEach(function (pendingEmit) {
+            console.log('HANDLING EMIT PENDING TO ' + host + ': ' + pendingEmit.msg);
+            emitToHost(host, pendingEmit.msg, pendingEmit.data, pendingEmit.callback);
+        });
+        pendingEmits[host] = [];
     }
 
-    function emitToAppHost(msg, data, callback) {
-        console.log('SIM-HOST to APP-HOST: ' + msg);
-        emitToHosts(app_host_socket, msg, data, callback);
-    }
-
-    function emitToHosts(host, msg, data, callback) {
-        if (host) {
-            host.emit(msg, data, callback);
+    function emitToHost(host, msg, data, callback) {
+        var socket = hostSockets[host];
+        if (socket) {
+            console.log('EMITTING \'' + msg + '\' to ' + host);
+            socket.emit(msg, data, callback);
+        } else {
+            console.log('EMITTING \'' + msg + '\' to ' + host + ' IS PENDING CONNECTION');
+            pendingEmits[host].push({msg: msg, data: data, callback: callback});
         }
     }
 
