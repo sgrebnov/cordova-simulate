@@ -19,20 +19,66 @@
  *
  */
 
-module.exports = {
-    initialize: function () {
-        var filenameInput = document.getElementById('camera-filename');
+var cordova = require('cordova');
 
-        document.getElementById('camera-choose-filename').addEventListener('click', function () {
-            filenameInput.input.click();
-        });
+module.exports = function (messages) {
+    var filenameInput = document.getElementById('camera-filename');
+    var dialogFilenameInput = document.getElementById('camera-dialog-filename');
 
-        filenameInput.addEventListener('change', function () {
-            console.log('CHANGE EVENT');
-            var url = URL.createObjectURL(filenameInput.files[0]);
-            var img = document.getElementById('camera-img');
-            img.src = url;
-            img.style.display = '';
-        });
+    messages.register('takePicture', function (args, callback) {
+        if (document.getElementById('camera-host').checked) {
+            window.alert('Not supported');
+        } else if (document.getElementById('camera-prompt').checked) {
+            var img = document.getElementById('camera-dialog-image');
+
+            // Not we use .onclick etc here rather than addEventListener() to ensure we replace any existing handler
+            // with one that uses the appropriate values from the current closure.
+            document.getElementById('camera-dialog-choose-filename').onclick = function () {
+                dialogFilenameInput.input.click();
+            };
+            document.getElementById('camera-dialog-use-image').onclick = function () {
+                cordova.hideDialog('camera-choose-image');
+                createArrayBuffer(dialogFilenameInput, callback);
+            };
+            document.getElementById('camera-dialog-cancel').onclick = function () {
+                cordova.hideDialog('camera-choose-image');
+                callback(null, null);
+            };
+            dialogFilenameInput.onchange = function () {
+                img.src = URL.createObjectURL(dialogFilenameInput.files[0]);
+                img.style.display = '';
+                document.getElementById('camera-dialog-use-image').style.display = '';
+            };
+
+            cordova.showDialog('camera-choose-image');
+        } else if (document.getElementById('camera-sample').checked) {
+            window.alert('Not supported');
+        } else if (document.getElementById('camera-file').checked) {
+            createArrayBuffer(filenameInput, callback);
+        }
+    });
+
+    function createArrayBuffer(input, callback) {
+        var blob = input.files[0];
+        var reader = new FileReader();
+        reader.onloadend = function () {
+            callback(reader.error, {data: reader.result, type: blob.type});
+        };
+        reader.readAsArrayBuffer(blob);
     }
+
+    return {
+        initialize: function () {
+            document.getElementById('camera-choose-filename').addEventListener('click', function () {
+                filenameInput.input.click();
+            });
+
+            filenameInput.addEventListener('change', function () {
+                var url = URL.createObjectURL(filenameInput.files[0]);
+                var img = document.getElementById('camera-img');
+                img.src = url;
+                img.style.display = '';
+            });
+        }
+    };
 };
