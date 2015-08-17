@@ -43,6 +43,8 @@ var PLUGIN_SIMULATION_FILES = {
     }
 };
 
+var platform;
+
 function init(server, root) {
     var io = require('socket.io')(server);
 
@@ -57,6 +59,7 @@ function init(server, root) {
 
     initPluginList();
     initPluginPaths();
+    addPlatformDefaultHandlers();
 
     io.on('connection', function (socket) {
         socket.on('register-app-host', function () {
@@ -153,6 +156,23 @@ function init(server, root) {
                 pluginPaths[pluginId] = pluginFilePath;
             }
         });
+    }
+
+    /**
+    * Adds platform specific exec handlers and ui components to the main plugins list so
+    * that they are injected to simulato host along with standard plugins
+    */
+    function addPlatformDefaultHandlers() {
+        
+        if (!platform) return; // platform not specified
+        
+        var platformScriptsRoot = path.join(__dirname, 'platforms', platform);
+        
+        if (fs.existsSync(platformScriptsRoot)) {
+            var pluginId = platform + '-platform-core';
+            pluginList.push(pluginId);
+            pluginPaths[pluginId] = platformScriptsRoot;
+        }
     }
 
     function findPluginPath(pluginId, hostType) {
@@ -448,8 +468,13 @@ function streamHostJsFile(filePath, request, response, hostType, scriptTypes) {
     server.sendStream(filePath, request, response, bundle, true);
 }
 
+function setPlatform(platformName) {
+    platform = platformName;
+}
+
 module.exports = {
     handleUrlPath: handleUrlPath,
     streamFile: streamFile,
-    init: init
+    init: init,
+    setPlatform: setPlatform
 };

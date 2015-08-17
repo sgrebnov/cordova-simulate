@@ -11,6 +11,8 @@ module.exports = function (args) {
 
     processArgs(args);
 
+    server.setPlatform(platform);
+
     prepare(platform).then(function () {
         return cordova_serve.servePlatform(platform, {
             urlPathHandler: server.handleUrlPath,
