@@ -19,7 +19,8 @@
  *
  */
 
-var PositionError = require('./PositionError'),
+var utils = require('utils'),
+    PositionError = require('./PositionError'),
     Position = require('./Position');
 
 var timers = {};   // list of timers in use
@@ -153,7 +154,7 @@ module.exports = function (messages, exec) {
         watchPosition: function (successCallback, errorCallback, options) {
             options = parseParameters(options);
 
-            var id = createUUID();
+            var id = utils.createUUID();
 
             // Tell device to get a position ASAP, and also retrieve a reference to the timeout timer generated in getCurrentPosition
             timers[id] = geolocation.getCurrentPosition(successCallback, errorCallback, options);
@@ -211,23 +212,3 @@ module.exports = function (messages, exec) {
         }
     };
 };
-
-function createUUID() {
-    return createUUIDPart(4) + '-' +
-        createUUIDPart(2) + '-' +
-        createUUIDPart(2) + '-' +
-        createUUIDPart(2) + '-' +
-        createUUIDPart(6);
-}
-
-function createUUIDPart(length) {
-    var uuidpart = "";
-    for (var i = 0; i < length; i++) {
-        var uuidchar = parseInt((Math.random() * 256), 10).toString(16);
-        if (uuidchar.length == 1) {
-            uuidchar = "0" + uuidchar;
-        }
-        uuidpart += uuidchar;
-    }
-    return uuidpart;
-}

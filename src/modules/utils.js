@@ -525,5 +525,30 @@ self = module.exports = {
             protocol: a.protocol,
             search: a.search
         };
+    },
+
+    createUUID: function () {
+        return createUUIDPart(4) + '-' +
+            createUUIDPart(2) + '-' +
+            createUUIDPart(2) + '-' +
+            createUUIDPart(2) + '-' +
+            createUUIDPart(6);
+    },
+
+    typeName: function (val) {
+        return Object.prototype.toString.call(val).slice(8, -1);
     }
 };
+
+function createUUIDPart(length) {
+    var uuidpart = "";
+    for (var i = 0; i < length; i++) {
+        var uuidchar = parseInt((Math.random() * 256), 10).toString(16);
+        if (uuidchar.length == 1) {
+            uuidchar = "0" + uuidchar;
+        }
+        uuidpart += uuidchar;
+    }
+    return uuidpart;
+}
+
