@@ -298,9 +298,15 @@ function streamFile(filePath, request, response) {
         return true;
     }
 
-    if (request.url === '/simulator/simulate.css' && request.headers['user-agent'].indexOf('Chrome') === -1) {
-        streamSimulatorCss(filePath, request, response);
-        return true;
+    if (request.url === '/simulator/simulate.css') {
+        // If target browser isn't Chrome (user agent contains 'Chrome', but isn't 'Edge'), remove shadow dom stuff from
+        // the CSS file.
+        var userAgent = request.headers['user-agent'];
+        var isChrome = userAgent.indexOf('Chrome') > -1 && userAgent.indexOf('Edge/') === -1;
+        if (!isChrome) {
+            streamSimulatorCss(filePath, request, response);
+            return true;
+        }
     }
 
     var requestPathArray = request.url.split('/');

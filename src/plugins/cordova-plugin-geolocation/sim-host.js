@@ -149,7 +149,11 @@ module.exports = function(messages) {
 
                 headingLabel.textContent = headingText;
                 headingMapLabel.innerHTML = headingText + '</br>' + headingDeg + '&deg;';
-                mapMarker.setAttribute('style', '-webkit-transform: rotate(' + headingDeg + 'deg);');
+
+                var style = ['-webkit-transform', '-ms-transform', '-moz-transform', '-o-transform', 'transform'].map(function (prop) {
+                    return prop + ': rotate(' + headingDeg + 'deg);';
+                }).join(' ');
+                mapMarker.setAttribute('style', style);
             }
 
             function updateValsFromMap() {

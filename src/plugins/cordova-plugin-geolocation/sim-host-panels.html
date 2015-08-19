@@ -77,7 +77,9 @@
         </section>
     </cordova-panel-row>
 
-    <cordova-panel-row>
+    <!-- Note that this needs to be a cordova-group not a cordova-panel-row as the flex box arranging of the latter
+     screws up sizing of the map box in Firefox -->
+    <cordova-group>
         <div class='geo-box'>
             <div class='geo-content'>
                 <div id="geo-map-container"></div>
@@ -89,7 +91,7 @@
                 <div id="geo-gpxreplaystatus"></div>
             </div>
         </div>
-    </cordova-panel-row>
+    </cordova-group>
     <cordova-panel-row>
         <section>
         <cordova-button id="geo-map-zoom-decrease" style="min-width:0;">-</cordova-button>
