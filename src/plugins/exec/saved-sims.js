@@ -19,26 +19,17 @@
  *
  */
 
-// TODO: Currently sim-host includes each plugin's sim-host.js as a separate file rather than using browserify
-// to build them into one single conglomerate. This means we end up with separate instances of required() files like
-// this one, and hence separate instances of our saved sim data. To work around that, we temporarily always work with
-// the value saved to storage.
-
 var db = require('db'),
     event = require('event');
 
-// Restore this once we are properly browserifying sim-host files.
-//var _sims = null;
+var _sims = null;
 
 module.exports = {
     get sims() {
-        // Restore this once we are properly browserifying sim-host files.
-        //if (!_sims) {
-        //    _sims = db.retrieveObject('saved-sims') || [];
-        //}
-        //return _sims;
-
-        return db.retrieveObject('saved-sims') || [];
+        if (!_sims) {
+            _sims = db.retrieveObject('saved-sims') || [];
+        }
+        return _sims;
     },
 
     addSim: function (sim) {

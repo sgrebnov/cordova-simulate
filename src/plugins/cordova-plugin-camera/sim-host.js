@@ -22,35 +22,26 @@
 var cordova = require('cordova');
 
 module.exports = function (messages) {
-    var filenameInput = document.getElementById('camera-filename');
-    var dialogFilenameInput = document.getElementById('camera-dialog-filename');
+    var filenameInput, dialogFilenameInput, dialogImg;
 
     messages.register('takePicture', function (args, callback) {
         if (document.getElementById('camera-host').checked) {
             window.alert('Not supported');
         } else if (document.getElementById('camera-prompt').checked) {
-            var img = document.getElementById('camera-dialog-image');
-
-            // Not we use .onclick etc here rather than addEventListener() to ensure we replace any existing handler
-            // with one that uses the appropriate values from the current closure.
-            document.getElementById('camera-dialog-choose-filename').onclick = function () {
-                dialogFilenameInput.input.click();
-            };
-            document.getElementById('camera-dialog-use-image').onclick = function () {
-                cordova.hideDialog('camera-choose-image');
-                createArrayBuffer(dialogFilenameInput, callback);
-            };
-            document.getElementById('camera-dialog-cancel').onclick = function () {
-                cordova.hideDialog('camera-choose-image');
-                callback(null, null);
-            };
-            dialogFilenameInput.onchange = function () {
-                img.src = URL.createObjectURL(dialogFilenameInput.files[0]);
-                img.style.display = '';
-                document.getElementById('camera-dialog-use-image').style.display = '';
-            };
-
-            cordova.showDialog('camera-choose-image');
+            cordova.showDialog('camera-choose-image', function (msg) {
+                if (msg === 'showing') {
+                    // Not we use .onclick etc here rather than addEventListener() to ensure we replace any existing
+                    // handler with one that uses the appropriate value of 'callback' from the current closure.
+                    document.getElementById('camera-dialog-use-image').onclick = function () {
+                        cordova.hideDialog('camera-choose-image');
+                        createArrayBuffer(dialogFilenameInput, callback);
+                    };
+                    document.getElementById('camera-dialog-cancel').onclick = function () {
+                        cordova.hideDialog('camera-choose-image');
+                        callback(null, null);
+                    };
+                }
+            });
         } else if (document.getElementById('camera-sample').checked) {
             window.alert('Not supported');
         } else if (document.getElementById('camera-file').checked) {
@@ -69,15 +60,30 @@ module.exports = function (messages) {
 
     return {
         initialize: function () {
+            filenameInput = document.getElementById('camera-filename');
+            dialogFilenameInput = document.getElementById('camera-dialog-filename');
+            dialogImg = document.getElementById('camera-dialog-image');
+            var panelImg = document.getElementById('camera-img');
+
+            // Setup handlers for choosing an image in the panel
             document.getElementById('camera-choose-filename').addEventListener('click', function () {
                 filenameInput.input.click();
             });
 
             filenameInput.addEventListener('change', function () {
-                var url = URL.createObjectURL(filenameInput.files[0]);
-                var img = document.getElementById('camera-img');
-                img.src = url;
-                img.style.display = '';
+                panelImg.src = URL.createObjectURL(filenameInput.files[0]);
+                panelImg.style.display = '';
+            });
+
+            // Setup handlers for choosing an image in the dialog
+            document.getElementById('camera-dialog-choose-filename').addEventListener('click', function () {
+                dialogFilenameInput.input.click();
+            });
+
+            dialogFilenameInput.addEventListener('change', function () {
+                dialogImg.src = URL.createObjectURL(dialogFilenameInput.files[0]);
+                dialogImg.style.display = '';
+                document.getElementById('camera-dialog-use-image').style.display = '';
             });
         }
     };
