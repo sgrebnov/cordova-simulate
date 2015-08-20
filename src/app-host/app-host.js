@@ -35,6 +35,17 @@ function setCordova(originalCordova) {
             cordova.require('cordova/channel').onNativeReady.fire();
         };
     }
+
+    // default Windows bootstrap function tries to load WinJS which is not
+    // available and not required in simulation mode so we override bootstrap
+    if (cordova.platformId === 'windows') {
+        cordova.require('cordova/platform').bootstrap = function () {
+            cordova.require('cordova/modulemapper')
+                .clobbers('cordova/exec/proxy', 'cordova.commandProxy');
+
+            cordova.require('cordova/channel').onNativeReady.fire();
+        };
+    }
 }
 
 function getCordova() {

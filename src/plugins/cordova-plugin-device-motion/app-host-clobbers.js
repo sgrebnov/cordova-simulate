@@ -20,6 +20,14 @@
  */
 
 module.exports = {
-    // This variable is required on Windows so that plugin works
-    Windows: {}
+    // This is required for device-motion tests for windows platform.
+    Windows: {
+        Devices: {
+            Sensors: {
+                Accelerometer: {
+                    getDefault: function () { return true; }
+                }
+            }
+        }
+    }
 };

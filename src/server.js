@@ -265,8 +265,16 @@ function processPluginRequires(pluginCode) {
 }
 
 function streamFile(filePath, request, response) {
-    if (request.url === '/index.html' || request.url === '/') {
-        // Inject plugin simulation app-host <script> references into index.html
+    if (request.url === '/simulator/index.html' || request.url === '/simulator/simulate.html') {
+        streamSimulator(filePath, request, response);
+        return true;
+    }
+
+    // Checking if request url ends with .html (5 is the length of '.html') or request url is '/'
+    // to inject plugin simulation app-host <script> references into any html page inside the app
+    if (request.url === '/' || request.url.indexOf('.html', request.url.length - 5) !== -1) {
+        // Inject plugin simulation app-host <script> references into *.html
+        console.log('INJECTING APP-HOST INTO ' + filePath);
         var scriptSources = [
             'https://cdn.socket.io/socket.io-1.2.0.js',
             '/simulator/app-host/app-host.js'
@@ -285,11 +293,6 @@ function streamFile(filePath, request, response) {
 
     if (request.url === '/simulator/app-host/app-host.js') {
         streamAppHostJs(filePath, request, response);
-        return true;
-    }
-
-    if (request.url === '/simulator/index.html' || request.url === '/simulator/simulate.html') {
-        streamSimulator(filePath, request, response);
         return true;
     }
 
