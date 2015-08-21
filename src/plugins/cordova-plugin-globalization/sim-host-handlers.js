@@ -65,7 +65,7 @@ function numberToString (win, fail) {
     }
 }
 
-function getDateNames (win, fail, service, action, args) {
+function getDateNames (win, fail, args) {
     try {
         var options = args[0].options || { type: 'wide', item: 'months' };
         var type = options.type || 'wide';
@@ -119,7 +119,7 @@ function getDatePattern (win, fail) {
     }
 }
 
-function getNumberPattern (win, fail, service, action, args) {
+function getNumberPattern (win, fail, args) {
     try {
         var options = args[0].options || { type : 'decimal'};
         options.type = options.type || 'decimal';
@@ -146,11 +146,11 @@ function getNumberPattern (win, fail, service, action, args) {
     }
 }
 
-function getCurrencyPattern (win, fail, service, action, args) {
+function getCurrencyPattern (win, fail, args) {
     fail('Not supported');
 }
 
-function stringToDate (win, fail, service, action, args) {
+function stringToDate (win, fail, args) {
     try {
         var options = prepareAndGetDateOptions(args[0].options);
         moment.locale(getLocaleName());
@@ -172,11 +172,11 @@ function stringToDate (win, fail, service, action, args) {
     }
 }
 
-function stringToNumber (win, fail, service, action, args) {
+function stringToNumber (win, fail, args) {
     fail('Not supported');
 }
 
-function dateToString (win, fail, service, action, args) {
+function dateToString (win, fail, args) {
     try {
         var date = new Date(args[0].date);
         var options = prepareAndGetDateOptions(args[0].options);

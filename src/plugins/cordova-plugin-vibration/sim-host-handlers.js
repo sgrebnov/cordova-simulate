@@ -20,7 +20,7 @@
  */
 
 module.exports = function (messages) {
-    function handleVibration(success, fail, service, action, args) {
+    function handleVibration(success, fail, args) {
         console.log('"' + service + '" "' + action + '" called with args "' + args + '"');
         var ms = args[0];
         messages.call('vibrate', ms).then(function () {
@@ -30,7 +30,7 @@ module.exports = function (messages) {
         });
     }
 
-    function handleVibrationWithPattern(success, fail, service, action, args) {
+    function handleVibrationWithPattern(success, fail, args) {
         console.log('"' + service + '" "' + action + '" called with args "' + args + '"');
         messages.call('vibrateWithPattern', args).then(function () {
             console.log('Vibrating with pattern - ' +args);
@@ -39,7 +39,7 @@ module.exports = function (messages) {
         });
     }
 
-    function handleCancelVibration(success, fail, service, action, args) {
+    function handleCancelVibration(success, fail, args) {
         console.log('"' + service + '" "' + action + '" called');
         messages.call('cancelVibration', 'cancelVibration').then(function () {
             console.log('Cancelling vibration');

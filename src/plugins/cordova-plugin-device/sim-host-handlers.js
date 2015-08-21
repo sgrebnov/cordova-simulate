@@ -21,7 +21,7 @@
 
 module.exports = {
     'Device': {
-        'getDeviceInfo': function (success, fail, service, action, args) {
+        'getDeviceInfo': function (success, fail, args) {
             success({
                 model: document.getElementById('device-model').value,
                 platform: document.getElementById('device-platform').value,

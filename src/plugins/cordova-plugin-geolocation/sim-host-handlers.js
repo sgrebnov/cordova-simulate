@@ -20,46 +20,25 @@
  */
 
 module.exports = function (messages) {
-    var geo = require('./geo-model')(messages),
+    var geo = require('./geo-model'),
         utils = require('utils'),
         PositionError = require('./PositionError'),
-        _watches = {},
-        _current = {
-            "latitude": 43.465187,
-            "longitude": -80.522372,
-            "altitude": 100,
-            "accuracy": 150,
-            "altitudeAccuracy": 80,
-            "heading": 0,
-            "velocity": 0
-        };
+        _watches = {};
 
     function _getCurrentPosition(win, fail) {
-        if (geo.timeout) {
-            if (fail) {
-                var positionError = new PositionError();
-
-                positionError.code = PositionError.TIMEOUT;
-                positionError.message = "position timed out";
-                fail(positionError);
+        var delay = (geo.delay || 0) * 1000;
+        window.setTimeout(function () {
+            if (geo.timeout) {
+                if (fail) {
+                    fail(new PositionError(PositionError.TIMEOUT, "Position retrieval timed out."));
+                }
+            } else {
+                win(geo.getPositionInfo())
             }
-        }
-        else {
-            win(geo.getPositionInfo());
-        }
+        }, delay);
     }
 
     messages.on('position-info-updated', function (message, pi) {
-        console.log('Setting latitude to: ' + pi.latitude);
-
-        _current.latitude = pi.latitude;
-        _current.longitude = pi.longitude;
-        _current.altitude = pi.altitude;
-        _current.accuracy = pi.accuracy;
-        _current.altitudeAccuracy = pi.altitudeAccuracy;
-        _current.heading = pi.heading;
-        _current.velocity = pi.speed;
-
         utils.forEach(_watches, function (watch) {
             try {
                 _getCurrentPosition(watch.win, watch.fail);

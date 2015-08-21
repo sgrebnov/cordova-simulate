@@ -21,13 +21,13 @@
 
 module.exports = function(messages) {
     var constants = require('sim-constants'),
-        geo       = require('./geo-model')(messages),
+        geo       = require('./geo-model'),
         db        = require('db'),
         event     = require('event'),
         utils     = require('utils'),
         _gpsMapZoomLevel;
 
-    geo.initialize();
+    geo.initialize(messages);
 
     function _updateGpsMap() {
         var positionInfo = geo.getPositionInfo(),
@@ -128,19 +128,26 @@ module.exports = function(messages) {
                 _replayingGpxFile      = false,
                 _haltGpxReplay    = false;
 
+            var updateGeoPending = false;
             function updateGeo() {
-                geo.updatePositionInfo({
-                        latitude: parseFloat(latitude.value),
-                        longitude: parseFloat(longitude.value),
-                        altitude: parseInt(altitude.value, 10),
-                        accuracy: parseInt(accuracy.value, 10),
-                        altitudeAccuracy: parseInt(altitudeAccuracy.value, 10),
-                        heading: heading.value ? parseFloat(heading.value) : 0, // HACK: see techdebt http://www.pivotaltracker.com/story/show/5478847
-                        speed: speed.value ? parseInt(speed.value, 10) : 0, // HACK: see techdebt http://www.pivotaltracker.com/story/show/5478847
-                        timeStamp: new Date()
-                    },
-                    delay.value,
-                    timeout.checked);
+                if (!updateGeoPending) {
+                    updateGeoPending = true;
+                    window.setTimeout(function () {
+                        geo.updatePositionInfo({
+                                latitude: parseFloat(latitude.value),
+                                longitude: parseFloat(longitude.value),
+                                altitude: parseInt(altitude.value, 10),
+                                accuracy: parseInt(accuracy.value, 10),
+                                altitudeAccuracy: parseInt(altitudeAccuracy.value, 10),
+                                heading: heading.value ? parseFloat(heading.value) : 0, // HACK: see techdebt http://www.pivotaltracker.com/story/show/5478847
+                                speed: speed.value ? parseInt(speed.value, 10) : 0, // HACK: see techdebt http://www.pivotaltracker.com/story/show/5478847
+                                timeStamp: new Date()
+                            },
+                            delay.value,
+                            timeout.checked);
+                        updateGeoPending = false;
+                    }, 0);
+                }
             }
 
             function updateHeadingValues() {
@@ -320,7 +327,7 @@ module.exports = function(messages) {
                     });
                 };
                 reader.onerror = function (e) {
-                    console.log('Ripple :: error reading gpx file ' + filename + ': ' + e);
+                    console.log('Error reading gpx file ' + filename + ': ' + e);
                 };
                 reader.readAsText(filename, 'UTF-8');
             }
@@ -345,7 +352,6 @@ module.exports = function(messages) {
 
                         updateGeo();
                         updateHeadingValues();
-                        triggerPositionUpdatedMessage();
 
                         moveNextGpxTrack(1);
                     }
@@ -356,7 +362,7 @@ module.exports = function(messages) {
                 if (_haltGpxReplay) {
                     _replayingGpxFile = false;
                     _haltGpxReplay = false;
-                    console.log('Ripple :: User interrupted replay of GPX file (Aye Captain, answers All Stop.)');
+                    console.log('User interrupted replay of GPX file.');
                 }
                 else {
                     _replayingGpxFile = true;
@@ -385,7 +391,6 @@ module.exports = function(messages) {
 
                         updateGeo();
                         updateHeadingValues();
-                        triggerPositionUpdatedMessage();
 
                         if (track[i + _step]) {
                             moveNextGpxTrack(i + _step);
@@ -397,7 +402,7 @@ module.exports = function(messages) {
                             else {
                                 _replayingGpxFile = false;
                                 gpxGo.textContent = constants.GEO.GPXGO_LABELS.GO;
-                                console.log('Ripple :: Finished replaying GPX file (Arriving at our destination, assuming standard orbit Captain.)');
+                                console.log('Finished replaying GPX file.');
                             }
                         }
                     }, _interval);
@@ -436,7 +441,7 @@ module.exports = function(messages) {
             var gpxFileLoader = document.querySelector('#' + GEO_OPTIONS.GPXFILE);
             var gpxFileButton = document.querySelector('#geo-gpxfile-button');
             gpxFileButton.addEventListener('click', function () {
-                gpxFileLoader.click();
+                gpxFileLoader.input.click();
             });
             gpxFileLoader.addEventListener('change', function () {
                 // It is possible to have no file selected and still get a change event.
@@ -477,7 +482,7 @@ module.exports = function(messages) {
                 _updateGpsMap();
             });
 
-            triggerPositionUpdatedMessage();
+            updateGeo();
 
             function triggerPositionUpdatedMessage() {
                 messages.emit(positionUpdatedMessage, {

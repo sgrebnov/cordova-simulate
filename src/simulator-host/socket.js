@@ -8,8 +8,6 @@ module.exports.initialize = function (pluginHandlers) {
 
     socket.emit('register-simulation-host');
     socket.on('exec', function (data) {
-        console.log('Exec was called with message: ' + data);
-
         if (!data) {
             throw 'Exec called on simulation host without exec info';
         }
@@ -32,11 +30,15 @@ module.exports.initialize = function (pluginHandlers) {
             throw 'Exec called on simulation host without an action specified';
         }
 
+        console.log('Exec ' + service + '.' + action + ' (index: ' + index + ')');
+
         var handler = pluginHandlers[service] && pluginHandlers[service][action];
         if (!handler) {
             handler = pluginHandlers['*']['*'];
+            handler(success, failure, service, action, data.args);
+        } else {
+            handler(success, failure, data.args);
         }
-        handler(success, failure, service, action, data.args);
     });
 };
 

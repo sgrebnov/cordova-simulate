@@ -114,7 +114,7 @@ function applyPlugins(plugins, clobberScope) {
         if (plugin) {
             if (typeof plugin === 'function') {
                 pluginMessages[pluginId] = pluginMessages[pluginId] || new Messages(pluginId, socket);
-                plugin = plugin(pluginMessages[pluginId]);
+                plugin = plugin(pluginMessages[pluginId], exec);
                 plugins[pluginId] = plugin;
             }
             if (clobberScope) {

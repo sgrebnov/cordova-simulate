@@ -18,15 +18,21 @@
  * under the License.
  *
  */
-var _self = function () {
-    return {
-        code: undefined,
-        message: undefined
-    };
+
+/**
+ * Position error object
+ *
+ * @constructor
+ * @param code
+ * @param message
+ */
+var PositionError = function(code, message) {
+    this.code = code || null;
+    this.message = message || '';
 };
 
-_self.PERMISSION_DENIED = "PERMISSION_DENIED";
-_self.POSITION_UNAVAILABLE = "POSITION_UNAVAILABLE";
-_self.TIMEOUT = "TIMEOUT";
+PositionError.PERMISSION_DENIED = 1;
+PositionError.POSITION_UNAVAILABLE = 2;
+PositionError.TIMEOUT = 3;
 
-module.exports = _self;
+module.exports = PositionError;
