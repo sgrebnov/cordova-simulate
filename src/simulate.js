@@ -1,4 +1,5 @@
 var Q = require('q'),
+    fs = require('fs'),
     exec = require('child_process').exec,
     cordova_serve = require('cordova-serve'),
     server = require('./server');
@@ -7,7 +8,8 @@ var platform,
     target;
 
 module.exports = function (args) {
-    var urlRoot;
+    var urlRoot,
+        startPage;
 
     processArgs(args);
 
@@ -21,7 +23,8 @@ module.exports = function (args) {
         });
     }).then(function (serverInfo) {
         urlRoot = 'http://localhost:' + serverInfo.port + '/';
-        return cordova_serve.launchBrowser({target: target, url: urlRoot + 'index.html'});
+        startPage = parseStartPage();
+        return cordova_serve.launchBrowser({target: target, url: urlRoot + startPage});
     }).then(function () {
         return cordova_serve.launchBrowser({target: target, url: urlRoot + 'simulator/index.html'});
     });
@@ -42,6 +45,22 @@ function prepare(platform) {
     });
 
     return d.promise;
+}
+
+function parseStartPage() {
+    // Start Page is defined as <content src="some_uri" /> in config.xml
+    // TODO: Once cordova-serve has been updated to provide the project root directory, use that here.
+    if (fs.existsSync('config.xml')) {
+        var startPageRegexp = /<content\s+src\s*=\s*"(.+)"\s*\/>/ig,
+            configFileContent = fs.readFileSync('config.xml');
+
+        var match = startPageRegexp.exec(configFileContent);
+        if (match) {
+            return match[1];
+        }
+    }
+
+    return 'index.html'; // default uri
 }
 
 function processArgs(args) {
