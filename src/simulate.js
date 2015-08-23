@@ -17,6 +17,7 @@ module.exports = function (args) {
 
     prepare(platform).then(function () {
         return cordova_serve.servePlatform(platform, {
+            noServerInfo: true,
             urlPathHandler: server.handleUrlPath,
             streamHandler: server.streamFile,
             serverExtender: server.init
@@ -24,6 +25,7 @@ module.exports = function (args) {
     }).then(function (serverInfo) {
         urlRoot = 'http://localhost:' + serverInfo.port + '/';
         startPage = parseStartPage();
+        server.log('Server started:\n- App running at: ' + urlRoot + startPage + '\n- Sim host running at: ' + urlRoot + 'simulator/index.html');
         return cordova_serve.launchBrowser({target: target, url: urlRoot + startPage});
     }).then(function () {
         return cordova_serve.launchBrowser({target: target, url: urlRoot + 'simulator/index.html'});
@@ -33,11 +35,11 @@ module.exports = function (args) {
 function prepare(platform) {
     var d = Q.defer();
 
-    console.log('Preparing platform \'' + platform + '\'.');
+    server.log('Preparing platform \'' + platform + '\'.');
     exec('cordova prepare ' + platform, function (err, stdout, stderr) {
         if (err) {
-            stderr = stderr || 'verify \'' + platform + '\' platform has been added to the project.'
-            console.error('Call to \'cordova prepare\' failed: ' + stderr);
+            stderr = stderr || 'Verify \'' + platform + '\' platform has been added to the project.'
+            server.error('Call to \'cordova prepare\' failed.\n' + stderr);
             d.reject(err);
         } else {
             d.resolve();

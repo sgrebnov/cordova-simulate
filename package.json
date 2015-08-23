@@ -22,6 +22,7 @@
   "homepage": "https://github.com/TimBarham/cordova-simulate",
   "dependencies": {
     "browserify": "^10.2.4",
+    "chalk": "^1.1.1",
     "combined-stream": "^1.0.3",
     "cordova-serve": "^0.1.1",
     "q": "^1.4.1",

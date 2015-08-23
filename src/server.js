@@ -20,6 +20,7 @@
  */
 
 var browserify    = require('browserify'),
+    chalk         = require('chalk'),
     fs            = require('fs'),
     path          = require('path'),
     replaceStream = require('replacestream'),
@@ -63,7 +64,7 @@ function init(server, root) {
 
     io.on('connection', function (socket) {
         socket.on('register-app-host', function () {
-            console.log('APP HOST REGISTERED WITH SERVER');
+            log('App-host registered with server.');
 
             // It only makes sense to have one app host per server. If more than one tries to connect, always take the
             // most recent.
@@ -85,7 +86,7 @@ function init(server, root) {
         });
 
         socket.on('register-simulation-host', function () {
-            console.log('SIMULATION HOST REGISTERED WITH SERVER');
+            log('Simulation host registered with server.');
 
             // It only makes sense to have one simulation host per server. If more than one tries to connect, always
             // take the most recent.
@@ -112,7 +113,7 @@ function init(server, root) {
 
     function handlePendingEmits(host) {
         pendingEmits[host].forEach(function (pendingEmit) {
-            console.log('HANDLING EMIT PENDING TO ' + host + ': ' + pendingEmit.msg);
+            log('Handling pending emit \'' + pendingEmit.msg + '\' to ' + host.toLowerCase());
             emitToHost(host, pendingEmit.msg, pendingEmit.data, pendingEmit.callback);
         });
         pendingEmits[host] = [];
@@ -121,10 +122,10 @@ function init(server, root) {
     function emitToHost(host, msg, data, callback) {
         var socket = hostSockets[host];
         if (socket) {
-            console.log('EMITTING \'' + msg + '\' to ' + host);
+            log('Emitting \'' + msg + '\' to ' + host.toLowerCase());
             socket.emit(msg, data, callback);
         } else {
-            console.log('EMITTING \'' + msg + '\' to ' + host + ' IS PENDING CONNECTION');
+            log('Emitting \'' + msg + '\' to ' + host.toLowerCase() + ' (pending connection)');
             pendingEmits[host].push({msg: msg, data: data, callback: callback});
         }
     }
@@ -163,11 +164,12 @@ function init(server, root) {
     * that they are injected to simulato host along with standard plugins
     */
     function addPlatformDefaultHandlers() {
-        
-        if (!platform) return; // platform not specified
-        
+        if (!platform) {
+            // platform not specified
+            return;
+        }
+
         var platformScriptsRoot = path.join(__dirname, 'platforms', platform);
-        
         if (fs.existsSync(platformScriptsRoot)) {
             var pluginId = platform + '-platform-core';
             pluginList.push(pluginId);
@@ -274,7 +276,7 @@ function streamFile(filePath, request, response) {
     // to inject plugin simulation app-host <script> references into any html page inside the app
     if (request.url === '/' || request.url.indexOf('.html', request.url.length - 5) !== -1) {
         // Inject plugin simulation app-host <script> references into *.html
-        console.log('INJECTING APP-HOST INTO ' + filePath);
+        log('Injecting app-host into ' + filePath);
         var scriptSources = [
             'https://cdn.socket.io/socket.io-1.2.0.js',
             '/simulator/app-host/app-host.js'
@@ -481,9 +483,19 @@ function setPlatform(platformName) {
     platform = platformName;
 }
 
+function log(msg) {
+    console.log(chalk.cyan('SIM: ' + msg));
+}
+
+function error(msg) {
+    console.log(chalk.red.bold('SIM ERROR: ' + msg));
+}
+
 module.exports = {
     handleUrlPath: handleUrlPath,
     streamFile: streamFile,
     init: init,
-    setPlatform: setPlatform
+    setPlatform: setPlatform,
+    log: log,
+    error: error
 };
