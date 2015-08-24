@@ -247,28 +247,15 @@ function handleUrlPath(urlPath, request, response, do302, do404, serveFile) {
 
     var filePath = splitPath.join('/');
     if (filePath === 'index.html') {
-        // Allow 'index.html' as a synonym for 'simulate.html'
-        filePath = 'simulate.html';
+        // Allow 'index.html' as a synonym for 'sim-host.html'
+        filePath = 'sim-host.html';
     }
-    serveFile(path.join(__dirname, 'simulator-host', filePath));
-}
-
-function processPluginRequires(pluginCode) {
-    // Look for x, where x is in require('x') or require("x")
-    var regexp = /require\(["']([^'^"]+)["']\)/g;
-    var result;
-    var requires = [];
-    while ((result = regexp.exec(pluginCode)) !== null) {
-        if (result[1].indexOf('.') === 0) {
-            requires.push(result[1]);
-        }
-    }
-    return requires.length ? requires : null;
+    serveFile(path.join(__dirname, 'sim-host', filePath));
 }
 
 function streamFile(filePath, request, response) {
-    if (request.url === '/simulator/index.html' || request.url === '/simulator/simulate.html') {
-        streamSimulator(filePath, request, response);
+    if (request.url === '/simulator/index.html' || request.url === '/simulator/sim-host.html') {
+        streamSimHostHtml(filePath, request, response);
         return true;
     }
 
@@ -298,26 +285,20 @@ function streamFile(filePath, request, response) {
         return true;
     }
 
-    if (request.url === '/simulator/simulate.js') {
-        streamSimulatorJs(filePath, request, response);
+    if (request.url === '/simulator/sim-host.js') {
+        streamSimHostJs(filePath, request, response);
         return true;
     }
 
-    if (request.url === '/simulator/simulate.css') {
+    if (request.url === '/simulator/sim-host.css') {
         // If target browser isn't Chrome (user agent contains 'Chrome', but isn't 'Edge'), remove shadow dom stuff from
         // the CSS file.
         var userAgent = request.headers['user-agent'];
         var isChrome = userAgent.indexOf('Chrome') > -1 && userAgent.indexOf('Edge/') === -1;
         if (!isChrome) {
-            streamSimulatorCss(filePath, request, response);
+            streamSimHostCss(filePath, request, response);
             return true;
         }
-    }
-
-    var requestPathArray = request.url.split('/');
-    if (requestPathArray[1] === 'simulator' && requestPathArray[2] === 'plugin' && requestPathArray[4] === PLUGIN_SIMULATION_FILES.SIM_HOST.JS) {
-        streamPluginSimHostJs(filePath, requestPathArray[3], request, response);
-        return true;
     }
 
     server.sendStream(filePath, request, response, null, true);
@@ -330,36 +311,7 @@ function getBrowserifySearchPaths() {
     return _browserifySearchPaths;
 }
 
-var _commonModules = null;
-function getCommonModules() {
-    if (!_commonModules) {
-        _commonModules = [];
-        getBrowserifySearchPaths().forEach(function (searchPath) {
-            fs.readdirSync(searchPath).forEach(function (file) {
-                if (path.extname(file) === '.js') {
-                    _commonModules.push({name: path.basename(file, '.js'), file: path.join(searchPath, file)});
-                }
-            });
-        });
-    }
-    return _commonModules;
-}
-
-function streamPluginSimHostJs(filePath, pluginId, request, response) {
-    // TODO: Optimize this so we build the file once and reuse it, unless dependencies have changed
-    var b = browserify({paths: getBrowserifySearchPaths()});
-
-    // Exclude common modules since they will be included with the main sim js file.
-    getCommonModules().forEach(function (module) {
-        b.exclude(module.name);
-    });
-
-    b.require(filePath, {expose: pluginId});
-    var bundle = b.bundle();
-    server.sendStream(filePath, request, response, bundle, true);
-}
-
-function streamSimulator(filePath, request, response) {
+function streamSimHostHtml(filePath, request, response) {
     // Inject references to simulation HTML files
     var panelsHtmlBasename = PLUGIN_SIMULATION_FILES.SIM_HOST.PANELS;
     var dialogsHtmlBasename = PLUGIN_SIMULATION_FILES.SIM_HOST.DIALOGS;
@@ -399,7 +351,7 @@ function processPluginHtml(html, pluginId) {
     });
 }
 
-function streamSimulatorCss(filePath, request, response) {
+function streamSimHostCss(filePath, request, response) {
     // Replace /deep/ combinator
     server.sendStream(filePath, request, response, fs.createReadStream(filePath)
         .pipe(replaceStream(/\^|\/shadow\/|\/shadow-deep\/|::shadow|\/deep\/|::content|>>>/g, ' ')), true);
@@ -424,7 +376,7 @@ function createScriptDefs(hostType, scriptTypes) {
     });
 }
 
-function streamSimulatorJs(filePath, request, response) {
+function streamSimHostJs(filePath, request, response) {
     streamHostJsFile(filePath, request, response, 'SIM_HOST', ['JS', 'HANDLERS']);
 }
 
@@ -438,7 +390,8 @@ function streamHostJsFile(filePath, request, response, hostType, scriptTypes) {
     var b = browserify({paths: getBrowserifySearchPaths()});
     b.transform(function (file) {
         if (file === filePath) {
-            var data = ''; return through2(function (buf, encoding, cb) {
+            var data = '';
+            return through2(function (buf, encoding, cb) {
                 data += buf;
                 cb();
             }, function (cb) {
