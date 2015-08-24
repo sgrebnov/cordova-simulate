@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /*
  Licensed to the Apache Software Foundation (ASF) under one
  or more contributor license agreements.  See the NOTICE file
@@ -19,38 +17,21 @@
  under the License.
  */
 
-var browserify    = require('browserify'),
-    chalk         = require('chalk'),
-    fs            = require('fs'),
-    path          = require('path'),
+var fs = require('fs'),
+    path = require('path'),
     replaceStream = require('replacestream'),
-    server        = require('cordova-serve'),
-    through2      = require('through2');
+    cordovaServe = require('cordova-serve'),
+    plugins = require('./plugins'),
+    simFiles = require('./sim-files'),
+    log = require('./log');
 
-var pluginPaths = [],
-    pluginList;
+var SIM_HOST_PANELS_HTML = 'sim-host-panels.html';
+var SIM_HOST_DIALOGS_HTML = 'sim-host-dialogs.html';
 
-var PLUGIN_SIMULATION_FILES = {
-    'SIM_HOST': {
-        'PANELS': 'sim-host-panels.html',
-        'DIALOGS': 'sim-host-dialogs.html',
-        'JS': 'sim-host.js',
-        'HANDLERS': 'sim-host-handlers.js'
-    },
-    'APP_HOST': {
-        'JS': 'app-host.js',
-        'HANDLERS': 'app-host-handlers.js',
-        'CLOBBERS': 'app-host-clobbers.js'
-    }
-};
-
-var platform;
-
-function init(server, root) {
+function init(server) {
     var io = require('socket.io')(server);
 
     this.server = server;
-    this.io = io;
 
     var hostSockets = {};
     var pendingEmits = {
@@ -58,13 +39,9 @@ function init(server, root) {
         'SIM-HOST': []
     };
 
-    initPluginList();
-    initPluginPaths();
-    addPlatformDefaultHandlers();
-
     io.on('connection', function (socket) {
         socket.on('register-app-host', function () {
-            log('App-host registered with server.');
+            log.log('App-host registered with server.');
 
             // It only makes sense to have one app host per server. If more than one tries to connect, always take the
             // most recent.
@@ -86,7 +63,7 @@ function init(server, root) {
         });
 
         socket.on('register-simulation-host', function () {
-            log('Simulation host registered with server.');
+            log.log('Simulation host registered with server.');
 
             // It only makes sense to have one simulation host per server. If more than one tries to connect, always
             // take the most recent.
@@ -113,7 +90,7 @@ function init(server, root) {
 
     function handlePendingEmits(host) {
         pendingEmits[host].forEach(function (pendingEmit) {
-            log('Handling pending emit \'' + pendingEmit.msg + '\' to ' + host.toLowerCase());
+            log.log('Handling pending emit \'' + pendingEmit.msg + '\' to ' + host.toLowerCase());
             emitToHost(host, pendingEmit.msg, pendingEmit.data, pendingEmit.callback);
         });
         pendingEmits[host] = [];
@@ -122,106 +99,28 @@ function init(server, root) {
     function emitToHost(host, msg, data, callback) {
         var socket = hostSockets[host];
         if (socket) {
-            log('Emitting \'' + msg + '\' to ' + host.toLowerCase());
+            log.log('Emitting \'' + msg + '\' to ' + host.toLowerCase());
             socket.emit(msg, data, callback);
         } else {
-            log('Emitting \'' + msg + '\' to ' + host.toLowerCase() + ' (pending connection)');
+            log.log('Emitting \'' + msg + '\' to ' + host.toLowerCase() + ' (pending connection)');
             pendingEmits[host].push({msg: msg, data: data, callback: callback});
         }
-    }
-
-    function initPluginList() {
-        // Always defined plugins
-        pluginList = ['exec','events'];
-
-        var pluginPath = path.resolve(root, 'plugins');
-        if (fs.existsSync(pluginPath)) {
-            fs.readdirSync(pluginPath).forEach(function (file) {
-                if (fs.statSync(path.join(pluginPath, file)).isDirectory()) {
-                    pluginList.push(file);
-                }
-            });
-        }
-
-        if (pluginList.indexOf('cordova-plugin-geolocation') === -1) {
-            pluginList.push('cordova-plugin-geolocation');
-        }
-    }
-
-    function initPluginPaths() {
-        pluginList.forEach(function (pluginId) {
-            // To be recognized for simulations, we need to find one of the known simulation files
-            // (such as sim-host.html, sim-host.js or app-host.js)
-            var pluginFilePath = findPluginPath(pluginId);
-            if (pluginFilePath) {
-                pluginPaths[pluginId] = pluginFilePath;
-            }
-        });
-    }
-
-    /**
-    * Adds platform specific exec handlers and ui components to the main plugins list so
-    * that they are injected to simulato host along with standard plugins
-    */
-    function addPlatformDefaultHandlers() {
-        if (!platform) {
-            // platform not specified
-            return;
-        }
-
-        var platformScriptsRoot = path.join(__dirname, 'platforms', platform);
-        if (fs.existsSync(platformScriptsRoot)) {
-            var pluginId = platform + '-platform-core';
-            pluginList.push(pluginId);
-            pluginPaths[pluginId] = platformScriptsRoot;
-        }
-    }
-
-    function findPluginPath(pluginId, hostType) {
-        if (!hostType) {
-            return findPluginPath(pluginId, 'SIM_HOST') || findPluginPath(pluginId, 'APP_HOST');
-        }
-        for (var file in PLUGIN_SIMULATION_FILES[hostType]) {
-            var pluginFilePath = findPluginSourceFilePath(pluginId, PLUGIN_SIMULATION_FILES[hostType][file]);
-            if (pluginFilePath) {
-                return pluginFilePath;
-            }
-        }
-    }
-
-    function findPluginSourceFilePath(pluginId, file) {
-        // We know the the target platform's 'www' folder ('root'), but we need to find the Cordova project root to find
-        // the plugins folder (since simulation related files won't be copied into the platform's plugins folder).
-        var pathArray = root.split(path.sep);
-        var pluginsDir = pathArray.slice(0, pathArray.lastIndexOf('platforms')).concat('plugins').join(path.sep);
-        var pluginPath = path.resolve(pluginsDir, pluginId, 'src/simulation');
-        var pluginFilePath = path.resolve(pluginPath, file);
-
-        if (fs.existsSync(pluginFilePath)) {
-            return pluginPath;
-        }
-
-        pluginPath = path.join(__dirname, 'plugins', pluginId);
-        pluginFilePath = path.join(pluginPath, file);
-        if (fs.existsSync(pluginFilePath)) {
-            return pluginPath;
-        }
-
-        return null;
     }
 }
 
 function handleUrlPath(urlPath, request, response, do302, do404, serveFile) {
+    serveFile(getFileToServe(urlPath));
+}
+
+function getFileToServe(urlPath) {
     if (urlPath.indexOf('/node_modules/') === 0) {
         // Something in our node_modules...
-        serveFile(path.resolve(__dirname, '..', urlPath.substr(1)));
-        return;
+        return path.resolve(__dirname, '..', urlPath.substr(1));
     }
 
     if (urlPath.indexOf('/simulator/') !== 0) {
         // Not a path we care about
-        serveFile();
-        return;
+        return null;
     }
 
     var splitPath = urlPath.split('/');
@@ -231,8 +130,14 @@ function handleUrlPath(urlPath, request, response, do302, do404, serveFile) {
     splitPath.shift();
 
     if (splitPath[0] === 'app-host') {
-        serveFile(path.join(__dirname, splitPath.join('/')));
-        return;
+        if (splitPath[1] === 'app-host.js') {
+            var appHostJsFile = simFiles.getHostJsFile('APP-HOST');
+            if (!appHostJsFile) {
+                throw new Error('Path to app-host js file has not been set.');
+            }
+            return appHostJsFile;
+        }
+        return path.join(__dirname, splitPath.join('/'));
     }
 
     if (splitPath[0] === 'plugin') {
@@ -240,17 +145,25 @@ function handleUrlPath(urlPath, request, response, do302, do404, serveFile) {
         splitPath.shift();
 
         var pluginId = splitPath.shift();
-        var pluginPath = pluginPaths[pluginId];
-        serveFile(pluginPath && path.join(pluginPath, splitPath.join('/')));
-        return;
+        var pluginPath = plugins.getPlugins()[pluginId];
+        return pluginPath && path.join(pluginPath, splitPath.join('/'));
     }
 
     var filePath = splitPath.join('/');
+
+    if (filePath === 'sim-host.js') {
+        var simHostJsFile = simFiles.getHostJsFile('SIM-HOST');
+        if (!simHostJsFile) {
+            throw new Error('Path to sim-host js file has not been set.');
+        }
+        return simHostJsFile;
+    }
+
     if (filePath === 'index.html') {
         // Allow 'index.html' as a synonym for 'sim-host.html'
         filePath = 'sim-host.html';
     }
-    serveFile(path.join(__dirname, 'sim-host', filePath));
+    return path.join(__dirname, 'sim-host', filePath);
 }
 
 function streamFile(filePath, request, response) {
@@ -263,7 +176,7 @@ function streamFile(filePath, request, response) {
     // to inject plugin simulation app-host <script> references into any html page inside the app
     if (request.url === '/' || request.url.indexOf('.html', request.url.length - 5) !== -1) {
         // Inject plugin simulation app-host <script> references into *.html
-        log('Injecting app-host into ' + filePath);
+        log.log('Injecting app-host into ' + filePath);
         var scriptSources = [
             'https://cdn.socket.io/socket.io-1.2.0.js',
             '/simulator/app-host/app-host.js'
@@ -274,19 +187,9 @@ function streamFile(filePath, request, response) {
 
         // Note we replace "default-src 'self'" with "default-src 'self' ws:" (in Content Security Policy) so that
         // websocket connections are allowed.
-        server.sendStream(filePath, request, response, fs.createReadStream(filePath)
+        cordovaServe.sendStream(filePath, request, response, fs.createReadStream(filePath)
             .pipe(replaceStream(/<\s*head\s*>/, '<head>' + scriptTags))
             .pipe(replaceStream('default-src \'self\'', 'default-src \'self\' ws:')), true);
-        return true;
-    }
-
-    if (request.url === '/simulator/app-host/app-host.js') {
-        streamAppHostJs(filePath, request, response);
-        return true;
-    }
-
-    if (request.url === '/simulator/sim-host.js') {
-        streamSimHostJs(filePath, request, response);
         return true;
     }
 
@@ -301,25 +204,20 @@ function streamFile(filePath, request, response) {
         }
     }
 
-    server.sendStream(filePath, request, response, null, true);
+    cordovaServe.sendStream(filePath, request, response, null, true);
     return true;
-}
-
-var _browserifySearchPaths = null;
-function getBrowserifySearchPaths() {
-    _browserifySearchPaths = _browserifySearchPaths || [path.join(__dirname, 'modules'), path.join(__dirname, 'third-party')];
-    return _browserifySearchPaths;
 }
 
 function streamSimHostHtml(filePath, request, response) {
     // Inject references to simulation HTML files
-    var panelsHtmlBasename = PLUGIN_SIMULATION_FILES.SIM_HOST.PANELS;
-    var dialogsHtmlBasename = PLUGIN_SIMULATION_FILES.SIM_HOST.DIALOGS;
+    var panelsHtmlBasename = SIM_HOST_PANELS_HTML;
+    var dialogsHtmlBasename = SIM_HOST_DIALOGS_HTML;
     var panelsHtml = [];
     var dialogsHtml = [];
-    var pluginLinkTemplate = '<link id="%PLUGINID%-import" rel="import" href="plugin/%PLUGINID%/sim-host.html">';
-    pluginList.forEach(function (pluginId) {
-        var pluginPath = pluginPaths[pluginId];
+
+    var pluginList = plugins.getPlugins();
+    Object.keys(pluginList).forEach(function (pluginId) {
+        var pluginPath = pluginList[pluginId];
         if (pluginPath) {
             var panelsHtmlFile = path.join(pluginPath, panelsHtmlBasename);
             if (fs.existsSync(panelsHtmlFile)) {
@@ -330,11 +228,9 @@ function streamSimHostHtml(filePath, request, response) {
             if (fs.existsSync(dialogsHtmlFile)) {
                 dialogsHtml.push(processPluginHtml(fs.readFileSync(dialogsHtmlFile, 'utf8'), pluginId));
             }
-
         }
-
     });
-    server.sendStream(filePath, request, response, fs.createReadStream(filePath)
+    cordovaServe.sendStream(filePath, request, response, fs.createReadStream(filePath)
         .pipe(replaceStream('<!-- PANELS -->', panelsHtml.join('\n')))
         .pipe(replaceStream('<!-- DIALOGS -->', dialogsHtml.join('\n'))), true);
 }
@@ -352,103 +248,13 @@ function processPluginHtml(html, pluginId) {
 }
 
 function streamSimHostCss(filePath, request, response) {
-    // Replace /deep/ combinator
-    server.sendStream(filePath, request, response, fs.createReadStream(filePath)
+    // Replace '/deep/' combinator
+    cordovaServe.sendStream(filePath, request, response, fs.createReadStream(filePath)
         .pipe(replaceStream(/\^|\/shadow\/|\/shadow-deep\/|::shadow|\/deep\/|::content|>>>/g, ' ')), true);
-}
-
-function createScriptDefs(hostType, scriptTypes) {
-    return scriptTypes.map(function (scriptType) {
-        return {
-            comment: {
-                'JS': '/** PLUGINS **/',
-                'HANDLERS': '/** PLUGIN-HANDLERS **/',
-                'CLOBBERS': '/** PLUGIN-CLOBBERS **/'
-            }[scriptType],
-            exposeId: {
-                'JS': '%PLUGINID%',
-                'HANDLERS': '%PLUGINID%-handlers',
-                'CLOBBERS': '%PLUGINID%-clobbers'
-            }[scriptType],
-            fileName: PLUGIN_SIMULATION_FILES[hostType][scriptType],
-            code: []
-        };
-    });
-}
-
-function streamSimHostJs(filePath, request, response) {
-    streamHostJsFile(filePath, request, response, 'SIM_HOST', ['JS', 'HANDLERS']);
-}
-
-function streamAppHostJs(filePath, request, response) {
-    streamHostJsFile(filePath, request, response, 'APP_HOST', ['JS', 'HANDLERS', 'CLOBBERS']);
-}
-
-function streamHostJsFile(filePath, request, response, hostType, scriptTypes) {
-    var scriptDefs = createScriptDefs(hostType, scriptTypes);
-
-    var b = browserify({paths: getBrowserifySearchPaths()});
-    b.transform(function (file) {
-        if (file === filePath) {
-            var data = '';
-            return through2(function (buf, encoding, cb) {
-                data += buf;
-                cb();
-            }, function (cb) {
-                data = scriptDefs.reduce(function (previousData, scriptDef) {
-                    return previousData.replace(scriptDef.comment, scriptDef.code.join(',\n'));
-                }, data);
-                this.push(data);
-                cb();
-            });
-        } else {
-            // No-op for other files
-            return through2(function (chunk, encoding, cb) {
-                cb(null, chunk);
-            });
-        }
-    });
-
-    b.add(filePath);
-
-    var pluginTemplate = '\'%PLUGINID%\': require(\'%EXPOSEID%\')';
-    pluginList.forEach(function (pluginId) {
-        var pluginPath = pluginPaths[pluginId];
-        if (pluginPath) {
-            scriptDefs.forEach(function (scriptDef) {
-                var pluginScriptFile = path.join(pluginPath, scriptDef.fileName);
-                if (fs.existsSync(pluginScriptFile)) {
-                    var exposeId = scriptDef.exposeId.replace(/%PLUGINID%/g, pluginId);
-                    scriptDef.code.push(pluginTemplate
-                        .replace(/%PLUGINID%/g, pluginId)
-                        .replace(/%EXPOSEID%/g, exposeId));
-                    b.require(pluginScriptFile, {expose: exposeId});
-                }
-            });
-        }
-    });
-
-    var bundle = b.bundle();
-    server.sendStream(filePath, request, response, bundle, true);
-}
-
-function setPlatform(platformName) {
-    platform = platformName;
-}
-
-function log(msg) {
-    console.log(chalk.cyan('SIM: ' + msg));
-}
-
-function error(msg) {
-    console.log(chalk.red.bold('SIM ERROR: ' + msg));
 }
 
 module.exports = {
     handleUrlPath: handleUrlPath,
     streamFile: streamFile,
-    init: init,
-    setPlatform: setPlatform,
-    log: log,
-    error: error
+    init: init
 };
