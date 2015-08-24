@@ -21,7 +21,7 @@
 
 A browser based plugin simulation tool to aid development and testing of Cordova applications.
 
-<mark>Note that this is currently a work in progress / prototype! It still lacks a bunch of functionality, and may be quite buggy.</mark>
+*Note that this is currently a work in progress / prototype! It still lacks a bunch of functionality, and may be quite buggy.*
 
 It is somewhat based on [Apache Ripple&trade;](http://ripple.incubator.apache.org/), but aims to improve it in the following ways:
 
@@ -44,25 +44,27 @@ simulate [<platform>] [--target=<browser>]
 
 Where:
 
-* **platform** is any Cordova platform that has been added to your project. If no platform is specified, the browser
+* **platform** is any Cordova platform that has been added to your project. If no platform is specified, the `browser`
   platform will be used.
-* **browser** is the name of the browser to launch your app in. Can be any of the following: `chrome`, `chromium`,
+* **browser** is the name of the browser to launch your app in. Can be any of the following: `chrome`, `chromium`, `edge`,
   `firefox`, `ie`, `opera`, `safari`.  
 
 # What it does
 
 Cordova simulate will launch your app in the browser, and open a second browser window displaying UI that allows you to control how plugins in your application work.
 
-This preview version includes built-in support for the following Cordova plugins:
+This preview version currently includes built-in support for the following Cordova plugins:
 
 * [cordova-plugin-camera](https://github.com/apache/cordova-plugin-camera)
 * [cordova-plugin-device](https://github.com/apache/cordova-plugin-device)
 * [cordova-plugin-device-motion](https://github.com/apache/cordova-plugin-device-motion)
+* [cordova-plugin-dialogs](https://github.com/apache/cordova-plugin-dialogs)
 * [cordova-plugin-geolocation](https://github.com/apache/cordova-plugin-geolocation)
 * [cordova-plugin-globalization](https://github.com/apache/cordova-plugin-globalization)
+* [cordova-plugin-media](https://github.com/apache/cordova-plugin-media)
 * [cordova-plugin-vibration](https://github.com/apache/cordova-plugin-vibration)
 
 It also allows for plugins to define their own UI. To add simulation support to a plugin, follow these steps:
 
 1. Clone the `cordova-simulate` git repository (`git clone https://github.com/TimBarham/cordova-simulate.git`), as it contains useful example code (see `src/plugins`).
-2. Add your plugin UI code to your plugin in `src/simulation`. There must be a file called `sim-host-controls.html`, which defines the UI to display in the simulation window, and there can also be supporting js, css and image files which it references.
+2. Add your plugin UI code to your plugin in `src/simulation`. Follow the file naming conventions seen in the built-in plugins.
