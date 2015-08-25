@@ -1,0 +1,200 @@
+/*
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * 'License'); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * 'AS IS' BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ *
+ */
+
+var db = require('db');
+var dbContactsObjectName = 'contacts';
+var defaultContacts = require('./default-contacts');
+
+module.exports = function (messages) {
+    // load default contacts if no contacts were saved
+    var contacts = db.retrieveObject(dbContactsObjectName) || [];
+    if (contacts.length === 0) {
+        db.saveObject(dbContactsObjectName, defaultContacts);
+    }
+
+    function save(success, fail, args) {
+        var contact = args[0];
+        if (!contact.id) {
+            contact.id = generateGuid();
+        }
+        var contacts = db.retrieveObject(dbContactsObjectName) || [];
+        var updateOperation = false;
+        for (var i = 0; i < contacts.length; i++) {
+            if (contacts[i].id === contact.id) {
+                contacts[i] = contact;
+                updateOperation = true;
+            }
+        }
+        if (!updateOperation) {
+            contacts.push(contact);
+        } else {
+            // Some contact properties uses arrays of specifis objects
+            // in this case we should look at 'value' fields of these objects
+            // and remove these objects if 'value' is empty
+            for (var propIndex in contact) {
+                var property = contact[propIndex];
+                // Check if property is Array
+                if (property !== null && Object.prototype.toString.call(property) === '[object Array]') {
+                    for (var itemIndex in property) {
+                        var item = property[itemIndex];
+                        if (item && typeof item.value !== 'undefined' && item.value === '') {
+                            var emptyIndex = contact[propIndex].indexOf(item);
+                            contact[propIndex].splice(emptyIndex, 1);
+                        }
+                    }
+                }
+            }
+        }
+        db.saveObject(dbContactsObjectName, contacts);
+        success(contact);
+    }
+
+    function remove(success, fail, args) {
+        var id = args[0];
+        var contacts = db.retrieveObject(dbContactsObjectName) || [];
+        var indexToDelete = null;
+        for (var i = 0; i < contacts.length; i++) {
+            if (contacts[i].id === id) {
+                indexToDelete = i;
+                break;
+            }
+        }
+
+        if (indexToDelete !== null) {
+            contacts.splice(indexToDelete, 1);
+            db.saveObject(dbContactsObjectName, contacts);
+            success();
+        } else {
+            // 0 refers to ContactError.UNKNOWN_ERROR
+            fail(0);
+        }
+    }
+
+    function search(success, fail, args) {
+        var fields = args[0];
+        var options = args[1];
+
+        var contacts = db.retrieveObject(dbContactsObjectName) || [];
+
+        if (!options || (!options.filter && options.multiple)) {
+            success(contacts);
+            return;
+        } else if (!options.filter && !options.multiple) {
+            success([contacts[0]]);
+            return;
+        }
+
+        var searchedContacts = [];
+
+        for (var contactIndex in contacts) {
+            var contact = contacts[contactIndex];
+
+            var found = false;
+
+            if (options.hasPhoneNumber && (contact.phoneNumbers === null || contact.phoneNumbers.length === 0)) {
+                return;
+            }
+
+            fields.forEach(function (field) {
+                // If contact property contains several fields,
+                // we need to search these fields
+                if (typeof contact[field] === 'object') {
+                    for(var fieldIndex in contact[field]) {
+                        var fieldValue = contact[field][fieldIndex];
+                        if (fieldValue === options.filter) {
+                            found = true;
+                            return;
+                        }
+                    }
+                } else if (contact[field] === options.filter) {
+                    found = true;
+                    return;
+                }
+            });
+
+            if (found) {
+                if (options.desiredFields.length > 0) {
+                    var newContact = {};
+                    options.desiredFields.forEach(function (desired) {
+                        newContact[desired] = contact[desired];
+                    });
+                    searchedContacts.push(newContact);
+                } else {
+                    searchedContacts.push(contact);
+                }
+
+                // break the loop if one contact was already found
+                // and options does not contain 'multiple' arg
+                if (!options.multiple && searchedContacts.length >= 1) {
+                    break;
+                }
+            }
+        }
+
+        success(searchedContacts);
+    }
+
+    function pickContact(success, fail, args) {
+        var contacts = db.retrieveObject(dbContactsObjectName) || [];
+        messages.call('pickContact', contacts).then(function (result) {
+            success(result);
+        }, function (err) {
+            fail(err);
+        });
+    }
+
+    function notifyNotSupported() {
+        console.log('This method is not supported yet');
+    }
+
+    function generateGuid() {
+      function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+          .toString(16)
+          .substring(1);
+      }
+      return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+        s4() + '-' + s4() + s4() + s4();
+    }
+
+    return {
+        'Contacts': {
+            // common exec's
+            'pickContact': pickContact,
+            'search': search,
+            'save': save,
+            'remove': remove,
+            // iOS specific exec's
+            'chooseContact': notifyNotSupported,
+            'displayContact': notifyNotSupported,
+            'newContact': notifyNotSupported
+        },
+        // This handler serves for 'deviceready' event firing
+        // on Android and iOS platforms
+        // TODO: Remove this handler when File plugin simulation
+        // is implemented
+        'File': {
+            'requestAllPaths': function (success, fail, args) {
+                success();
+            }
+        }
+    };
+};
