@@ -66,6 +66,7 @@ function initialize() {
     }, function () {
         this.classList.add('cordova-group');
     });
+
     registerCustomElement('cordova-item', function () {
         this.classList.add('cordova-group');
         var item = this;
@@ -102,7 +103,7 @@ function initialize() {
                 return this.shadowRoot.getElementById('cordova-checkbox-template-input').checked;
             },
             set: function (value) {
-                this.shadowRoot.getElementById('cordova-checkbox-template-input').checked = value;
+                setValueSafely(this.shadowRoot.getElementById('cordova-checkbox-template-input'), 'checked', value);
             }
         }
     }, function () {
@@ -121,7 +122,7 @@ function initialize() {
                 return this.shadowRoot.getElementById('cordova-radio-template-input').checked;
             },
             set: function (value) {
-                this.shadowRoot.getElementById('cordova-radio-template-input').checked = value;
+                setValueSafely(this.shadowRoot.getElementById('cordova-radio-template-input'), 'checked', value);
             }
         }
     }, function () {
@@ -140,7 +141,7 @@ function initialize() {
     registerCustomElement('cordova-label', {
         textContent: {
             set: function (value) {
-                this.shadowRoot.querySelector('label').textContent = value;
+                setValueSafely(this.shadowRoot.querySelector('label'), 'textContent', value);
             },
             get: function () {
                 return this.shadowRoot.querySelector('label').textContent;
@@ -153,7 +154,7 @@ function initialize() {
     registerCustomElement('cordova-text-entry', {
         value: {
             set: function (value) {
-                this.shadowRoot.querySelector('input').value = value;
+                setValueSafely(this.shadowRoot.querySelector('input'), 'value', value);
             },
 
             get: function () {
@@ -169,7 +170,7 @@ function initialize() {
     registerCustomElement('cordova-labeled-value', {
         label: {
             set: function (value) {
-                this.shadowRoot.querySelector('label').textContent = value;
+                setValueSafely(this.shadowRoot.querySelector('label'), 'textContent', value);
             },
 
             get: function() {
@@ -178,7 +179,7 @@ function initialize() {
         },
         value: {
             set: function (value) {
-                this.shadowRoot.querySelector('span').textContent = value;
+                setValueSafely(this.shadowRoot.querySelector('span'), 'textContent', value);
             },
 
             get: function() {
@@ -348,6 +349,18 @@ function findParent(element, tag) {
 
     var parent = element.parentNode;
     return parent && parent.tagName ? tag.indexOf(parent.tagName.toLowerCase()) > -1 ? parent : findParent(parent, tag) : null;
+}
+
+function setValueSafely(el, prop, value) {
+    // In IE, setting the property when the element hasn't yet been added to the document can fail (like an issue with
+    // the webcomponents polyfill), so do it after a setTimeout().
+    if (el.ownerDocument.contains(el)) {
+        el[prop] = value;
+    } else {
+        window.setTimeout(function () {
+            el[prop] = value;
+        }, 0);
+    }
 }
 
 module.exports = {
