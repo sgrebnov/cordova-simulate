@@ -262,10 +262,8 @@ module.exports = function(messages) {
                     utils.forEach(t, function (p, i) {
                         if (!isNaN(i)) {
                             att = t[i].attributes;
-                            lastAtt = t[i - 1] ? t[i - 1].attributes : {};
-                            _ele = parseXml(t[i]).querySelectorAll('ele')[0];
-                            _timestamp = parseXml(t[i]).querySelectorAll('time')[0];
-                            _lastTimestamp = parseXml(t[i - 1]).querySelectorAll('time')[0];
+                            _ele = t[i].querySelectorAll('ele')[0];
+                            _timestamp = t[i].querySelectorAll('time')[0];
 
                             if (_timestamp) {
                                 //files recorded with endomondo and others have timestamps, this is not a route plan but a record of a track
@@ -273,6 +271,9 @@ module.exports = function(messages) {
                             }
 
                             if (t[i - 1]) {
+                                lastAtt = t[i - 1].attributes;
+                                _lastTimestamp = t[i - 1].querySelectorAll('time')[0];
+
                                 _dist = navUtils.getDistance(att['lat'].value, att['lon'].value, lastAtt['lat'].value, lastAtt['lon'].value);
 
                                 if (_lastTimestamp) {
