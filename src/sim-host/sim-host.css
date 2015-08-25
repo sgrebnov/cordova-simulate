@@ -2,10 +2,6 @@ body {
     margin: 0 !important;
     padding: 0 !important;
     border: 0 !important;
-    width: 100%;
-    height: 100%;
-    overflow-x: auto;
-    overflow-y: hidden;
     font-family: 'Helvetica Neue', 'Roboto', 'Segoe UI', sans-serif;
     background: rgb(238,238,238);
     user-select: none;
@@ -34,8 +30,8 @@ a {
 }
 
 cordova-panel {
-    margin: 10px 0 0 10px;
     width: 320px;
+    padding: 5px 0;
 }
 
 cordova-dialog {
@@ -48,14 +44,17 @@ cordova-panel, cordova-dialog {
     -webkit-column-break-inside:avoid;
     page-break-inside:avoid;
     break-inside:avoid;
-    border-radius: 2px;
+    display: block;
+}
+
+body /deep/ .cordova-panel-inner {
     box-shadow: 2px 2px 5px 1px rgba(0, 0, 0, 0.2);
     background: #fff;
+    border-radius: 3px;
+    overflow: hidden;
 }
 
 body /deep/ .cordova-header {
-    border-top-left-radius: 2px;
-    border-top-right-radius: 2px;
     padding: 5px 9px;
     position: relative;
     background-color: #03a9f4;
@@ -70,36 +69,21 @@ body /deep/ .cordova-widget {
     font-size: 14px;
 }
 
-body /deep/ cordova-panel > *::shadow > .cordova-group,
-body /deep/ cordova-dialog > *::shadow > .cordova-group,
-body /deep/ cordova-panel > .cordova-group,
-body /deep/ cordova-dialog > .cordova-group {
+/* First selector is for browsers with shadow dom, second selector for browsers without */
+cordova-panel > .cordova-group,  cordova-panel > section > section > .cordova-group {
     margin: 12px;
     position: relative;
 }
 
 .cordova-main {
-    position: absolute;
-    top: 0;
-    left: 0;
-
-    -ms-flex-align: center;
-    -webkit-align-items: center;
-    align-items: center;
-
-    -ms-flex-wrap: wrap;
-    -webkit-flex-wrap: wrap;
-    flex-wrap: wrap;
-
-    display: -ms-inline-flexbox;
-    display: -webkit-inline-flex;
-    display: inline-flex;
-
-    -ms-flex-direction: column;
-    -webkit-flex-direction: column;
-    flex-direction: column;
-
-    height: 100%;
+    margin-left: 10px;
+    margin-top: 5px;
+    column-width: 330px;
+    -moz-column-width: 330px;
+    -webkit-column-width: 330px;
+    column-gap: 0;
+    -moz-column-gap: 0;
+    -webkit-column-gap: 0;
 }
 
 body /deep/ label, body /deep/ p, body /deep/ .p {
