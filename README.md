@@ -56,6 +56,7 @@ Cordova simulate will launch your app in the browser, and open a second browser 
 This preview version currently includes built-in support for the following Cordova plugins:
 
 * [cordova-plugin-camera](https://github.com/apache/cordova-plugin-camera)
+* [cordova-plugin-contacts](https://github.com/apache/cordova-plugin-contacts)
 * [cordova-plugin-device](https://github.com/apache/cordova-plugin-device)
 * [cordova-plugin-device-motion](https://github.com/apache/cordova-plugin-device-motion)
 * [cordova-plugin-dialogs](https://github.com/apache/cordova-plugin-dialogs)
