@@ -46,7 +46,7 @@ module.exports = function (messages) {
         if (!updateOperation) {
             contacts.push(contact);
         } else {
-            // Some contact properties uses arrays of specifis objects
+            // Some contact properties uses arrays of specific objects
             // in this case we should look at 'value' fields of these objects
             // and remove these objects if 'value' is empty
             for (var propIndex in contact) {
@@ -94,62 +94,20 @@ module.exports = function (messages) {
 
         var contacts = db.retrieveObject(dbContactsObjectName) || [];
 
-        if (!options || (!options.filter && options.multiple)) {
-            success(contacts);
-            return;
-        } else if (!options.filter && !options.multiple) {
-            success([contacts[0]]);
-            return;
+        var queryResult = contacts.filter(function(contact) {
+             return isContactMatchesFilter(contact, options, fields);
+        });
+
+        if (!options.multiple && queryResult.length > 1) {
+            // select only first contact found
+            queryResult = [queryResult[0]];
         }
 
-        var searchedContacts = [];
+        queryResult = queryResult.map(function (contact) {
+            return extractDesiredFields(contact, options.desiredFields);
+        });
 
-        for (var contactIndex in contacts) {
-            var contact = contacts[contactIndex];
-
-            var found = false;
-
-            if (options.hasPhoneNumber && (contact.phoneNumbers === null || contact.phoneNumbers.length === 0)) {
-                return;
-            }
-
-            fields.forEach(function (field) {
-                // If contact property contains several fields,
-                // we need to search these fields
-                if (typeof contact[field] === 'object') {
-                    for(var fieldIndex in contact[field]) {
-                        var fieldValue = contact[field][fieldIndex];
-                        if (fieldValue === options.filter) {
-                            found = true;
-                            return;
-                        }
-                    }
-                } else if (contact[field] === options.filter) {
-                    found = true;
-                    return;
-                }
-            });
-
-            if (found) {
-                if (options.desiredFields.length > 0) {
-                    var newContact = {};
-                    options.desiredFields.forEach(function (desired) {
-                        newContact[desired] = contact[desired];
-                    });
-                    searchedContacts.push(newContact);
-                } else {
-                    searchedContacts.push(contact);
-                }
-
-                // break the loop if one contact was already found
-                // and options does not contain 'multiple' arg
-                if (!options.multiple && searchedContacts.length >= 1) {
-                    break;
-                }
-            }
-        }
-
-        success(searchedContacts);
+        success(queryResult);
     }
 
     function pickContact(success, fail, args) {
@@ -161,8 +119,74 @@ module.exports = function (messages) {
         });
     }
 
-    function notifyNotSupported() {
-        console.log('This method is not supported yet');
+    function isContactMatchesFilter(contact, options, fields) {
+        // test special case (hasPhoneNumber option)
+        if (options.hasPhoneNumber && (!contact.phoneNumbers || contact.phoneNumbers.length === 0)) {
+            return false;
+        }
+
+        // If filter is not set we assume contact matches it (used to return all contacts)
+        if (!options.filter || options.filter === '') {
+            return true;
+        }
+
+        var contactField;
+        // Searching by all fields
+        if (fields.indexOf('*') !== -1) {
+            for (var index in contact) {
+                contactField = contact[index];
+                if (isContactFieldMatchesFilter(contactField, options.filter)) {
+                    return true;
+                }
+            }
+        } else {
+            // Searching only by fields specified in args
+            for (var fieldIndex in fields) {
+                var contactFieldName = fields[fieldIndex];
+                contactField = contact[contactFieldName];
+                if (isContactFieldMatchesFilter(contactField, options.filter)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    function isContactFieldMatchesFilter(field, filter) {
+        // If contact property contains several fields,
+        // we need to search through all of them
+        if (typeof field === 'object') {
+            for(var fieldIndex in field) {
+                if (isContactFieldMatchesFilter(field[fieldIndex], filter)) {
+                    return true;
+                }
+            }
+        } else { // test standard type property
+            // special partial case insensitive comparison for strings
+            if (typeof field === 'string') {
+                return field && field.toLowerCase().indexOf(filter.toLowerCase()) >= 0;
+            }
+            // for non-strings
+            return field === filter;
+        }
+        return false;
+    }
+
+    // if desired fields specified, we must return only these fields specified
+    function extractDesiredFields(contact, desiredFields) {
+        if (desiredFields && desiredFields.length > 0) {
+            var newContact = {};
+            desiredFields.forEach(function (desired) {
+                newContact[desired] = contact[desired];
+            });
+            return newContact;
+        } else {
+            return contact;
+        }
+    }
+
+    function notifyNotSupported(success, fail, args) {
+        fail('This method is not supported yet');
     }
 
     function generateGuid() {
