@@ -21,6 +21,9 @@
 
 # Cordova-simulate Release Notes
 
+### 0.1.5 (Aug 26, 2015)
+* Fix problem when running cordova-simulate from package (via `npm install`) rather than local git clone ([4ed4ae80](https://github.com/timbarham/cordova-simulate/commit/4ed4ae80)).
+
 ### 0.1.4 (Aug 25, 2015)
 * Added `Close` icon to dialog caption bar ([9e332fe6](https://github.com/timbarham/cordova-simulate/commit/9e332fe6)).
 * Cleaned up some styling ([17ae295f](https://github.com/timbarham/cordova-simulate/commit/17ae295f)).
