@@ -64,11 +64,11 @@ function createHostJsFile(hostType, scriptTypes, pluginsChanged) {
     var outputFile = path.join(simulationFilePath, hostBaseName + '.js');
     hostJsFiles[hostType] = outputFile;
     var jsonFile = path.join(simulationFilePath, hostBaseName + '.json');
-    var fileInfo = {};
 
     // See if we already have created our output file, and it is up-to-date with all its dependencies. However, if the
     // list of plugins has changed, or the directory where a plugin's simulation definition lives has changed, we need
     // to force a refresh.
+    var fileInfo = {};
     if (!pluginsChanged && fs.existsSync(outputFile) && fs.existsSync(jsonFile)) {
         var upToDate = true;
         fileInfo = require(jsonFile);
@@ -135,6 +135,7 @@ function createHostJsFile(hostType, scriptTypes, pluginsChanged) {
         });
     });
 
+    fileInfo = {};
     b.on('file', function (file) {
         fileInfo[file] = new Date(fs.statSync(file).mtime).getTime();
     });
@@ -162,8 +163,8 @@ function createHostJsFile(hostType, scriptTypes, pluginsChanged) {
 var _browserifySearchPaths = null;
 function getBrowserifySearchPaths(hostType) {
     _browserifySearchPaths = _browserifySearchPaths || {
-            'APP-HOST': [path.join(__dirname, 'app-host'), path.join(__dirname, 'common'), path.join(__dirname, 'third-party')],
-            'SIM-HOST': [path.join(__dirname, 'sim-host'), path.join(__dirname, 'common'), path.join(__dirname, 'third-party')]
+            'APP-HOST': [path.join(__dirname, 'modules', 'app-host'), path.join(__dirname, 'modules', 'common'), path.join(__dirname, 'third-party')],
+            'SIM-HOST': [path.join(__dirname, 'modules', 'sim-host'), path.join(__dirname, 'modules', 'common'), path.join(__dirname, 'third-party')],
         };
     return hostType ? _browserifySearchPaths[hostType] : _browserifySearchPaths;
 }
@@ -196,11 +197,13 @@ function getCommonModules(hostType) {
         Object.keys(browserifySearchPaths).forEach(function (hostType) {
             _commonModules[hostType] = [];
             browserifySearchPaths[hostType].forEach(function (searchPath) {
-                fs.readdirSync(searchPath).forEach(function (file) {
-                    if (path.extname(file) === '.js') {
-                        _commonModules[hostType].push({name: path.basename(file, '.js'), file: path.join(searchPath, file)});
-                    }
-                });
+                if (fs.existsSync(searchPath)) {
+                    fs.readdirSync(searchPath).forEach(function (file) {
+                        if (path.extname(file) === '.js') {
+                            _commonModules[hostType].push({name: path.basename(file, '.js'), file: path.join(searchPath, file)});
+                        }
+                    });
+                }
             });
         });
     }
