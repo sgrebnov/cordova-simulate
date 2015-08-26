@@ -32,8 +32,15 @@ function showDialog(dialogId, cb) {
 module.exports.showDialog = showDialog;
 
 function hideDialog(dialogId) {
-    if (dialogId !== currentDialogId) {
-        throw 'Trying to hide a dialog that isn\'t currently showing: ' + dialogId;
+    if (!dialogId) {
+        dialogId = currentDialogId;
+        if (!dialogId) {
+            throw 'Trying to hide dialog when none is showing.';
+        }
+    } else {
+        if (dialogId !== currentDialogId) {
+            throw 'Trying to hide a dialog that isn\'t currently showing: ' + dialogId;
+        }
     }
 
     var dialog = pluginDialogs[dialogId];

@@ -261,9 +261,20 @@ body /deep/ .cordova-collapse-icon.cordova-collapsed {
     background: url('expand.png') no-repeat 50% 50%;
 }
 
-
-body /deep/ .cordova-collapse-icon:hover {
+body /deep/ .cordova-collapse-icon:hover, body /deep/ .cordova-close-icon:hover {
     background-color: rgba(255, 255, 255, 0.25);
+}
+
+body /deep/ .cordova-close-icon {
+    cursor: pointer;
+    background: url('close.png') no-repeat 50% 50%;
+    width: 22px;
+    height: 22px;
+    position: absolute;
+    margin-top: 1px;
+    margin-bottom: auto;
+    right: 6px;
+    margin-left: auto;
 }
 
 body /deep/ .cordova-content {

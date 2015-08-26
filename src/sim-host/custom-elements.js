@@ -1,3 +1,5 @@
+var cordova = require('cordova');
+
 function initialize() {
     registerCustomElement('cordova-panel', function () {
         var panel = this;
@@ -50,6 +52,9 @@ function initialize() {
 
     registerCustomElement('cordova-dialog', function () {
         this.shadowRoot.querySelector('.cordova-header span').textContent = this.getAttribute('caption');
+        this.shadowRoot.querySelector('.cordova-close-icon').addEventListener('click', function () {
+            cordova.hideDialog();
+        });
     });
 
     registerCustomElement('cordova-item-list', {
