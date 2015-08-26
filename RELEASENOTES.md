@@ -21,6 +21,25 @@
 
 # Cordova-simulate Release Notes
 
+### 0.1.4 (Aug 25, 2015)
+* Added `Close` icon to dialog caption bar ([9e332fe6](https://github.com/timbarham/cordova-simulate/commit/9e332fe6)).
+* Cleaned up some styling ([17ae295f](https://github.com/timbarham/cordova-simulate/commit/17ae295f)).
+* Moved to column rather than flexbox layout ([92b1b040](https://github.com/timbarham/cordova-simulate/commit/92b1b040)).
+* Added support for cordova-plugin-contacts ([7351adee](https://github.com/timbarham/cordova-simulate/commit/7351adee)).
+* Fix `Persisted Exec Calls` panel not populating in IE ([169e0e62](https://github.com/timbarham/cordova-simulate/commit/169e0e62)).
+* `Geolocation`: fix errors in `GPX` file parsing ([5159b613](https://github.com/timbarham/cordova-simulate/commit/5159b613)).
+* Browserify on prepare rather than serve (and optimize to only do when necessary) ([8c7a35ff](https://github.com/timbarham/cordova-simulate/commit/8c7a35ff)).
+* Add required `Camera` clobbers for `Windows` platform ([ad08c815](https://github.com/timbarham/cordova-simulate/commit/ad08c815)).
+* Clean up console output ([0b9459cd](https://github.com/timbarham/cordova-simulate/commit/0b9459cd)).
+* Support non-default start page ([a8263e5e](https://github.com/timbarham/cordova-simulate/commit/a8263e5e)).
+* Fixes to support running `mobilespec` tests ([d990a372](https://github.com/timbarham/cordova-simulate/commit/d990a372)).
+* Added support for `cordova-plugin-media` ([7fb46a04](https://github.com/timbarham/cordova-simulate/commit/7fb46a04)).
+* Added support for `cordova-plugin-dialogs` ([41adbcfb](https://github.com/timbarham/cordova-simulate/commit/41adbcfb)).
+* `Geolocation` panel fixes ([ebde6d35](https://github.com/timbarham/cordova-simulate/commit/ebde6d35)).
+* Fixes for Firefox, IE and Edge ([b737ecb5](https://github.com/timbarham/cordova-simulate/commit/b737ecb5)).
+* Add support for platform specific exec handlers ([8d266b59](https://github.com/timbarham/cordova-simulate/commit/8d266b59)).
+* Queue `showDialog()` calls if dialog already open ([71dc11eb](https://github.com/timbarham/cordova-simulate/commit/71dc11eb)).
+
 ### 0.1.3 (Aug 16, 2015)
 * Sim host logic for handling `exec` calls now mirrors app host logic ([f9ae6ab](https://github.com/TimBarham/cordova-simulate/commit/f9ae6ab)).
 * Renamed `sim-host-controls` files to `sim-host` and `sim-app-host` files to `app-host` ([c9f08c1](https://github.com/TimBarham/cordova-simulate/commit/c9f08c1)).
