@@ -73,7 +73,7 @@ function createHostJsFile(hostType, scriptTypes, pluginsChanged) {
         var upToDate = true;
         fileInfo = require(jsonFile);
         for (var file in fileInfo) {
-            if (fileInfo[file] !== new Date(fs.statSync(file).mtime).getTime()) {
+            if (!fs.existsSync(file) || fileInfo[file] !== new Date(fs.statSync(file).mtime).getTime()) {
                 upToDate = false;
                 break;
             }
@@ -90,7 +90,7 @@ function createHostJsFile(hostType, scriptTypes, pluginsChanged) {
 
     var scriptDefs = createScriptDefs(hostType, scriptTypes);
 
-    var b = browserify({paths: getBrowserifySearchPaths(), debug: true});
+    var b = browserify({paths: getBrowserifySearchPaths(hostType), debug: true});
     b.transform(function (file) {
         if (file === filePath) {
             var data = '';
@@ -113,6 +113,11 @@ function createHostJsFile(hostType, scriptTypes, pluginsChanged) {
     });
 
     b.add(filePath);
+
+    // Include common modules
+    getCommonModules(hostType).forEach(function (module) {
+        b.require(module.file, {expose: module.name});
+    });
 
     var pluginTemplate = '\'%PLUGINID%\': require(\'%EXPOSEID%\')';
     var pluginList = plugins.getPlugins();
@@ -155,9 +160,12 @@ function createHostJsFile(hostType, scriptTypes, pluginsChanged) {
 }
 
 var _browserifySearchPaths = null;
-function getBrowserifySearchPaths() {
-    _browserifySearchPaths = _browserifySearchPaths || [path.join(__dirname, 'modules'), path.join(__dirname, 'third-party')];
-    return _browserifySearchPaths;
+function getBrowserifySearchPaths(hostType) {
+    _browserifySearchPaths = _browserifySearchPaths || {
+            'APP-HOST': [path.join(__dirname, 'app-host'), path.join(__dirname, 'common'), path.join(__dirname, 'third-party')],
+            'SIM-HOST': [path.join(__dirname, 'sim-host'), path.join(__dirname, 'common'), path.join(__dirname, 'third-party')]
+        };
+    return hostType ? _browserifySearchPaths[hostType] : _browserifySearchPaths;
 }
 
 function createScriptDefs(hostType, scriptTypes) {
@@ -177,6 +185,26 @@ function createScriptDefs(hostType, scriptTypes) {
             code: []
         };
     });
+}
+
+
+var _commonModules = null;
+function getCommonModules(hostType) {
+    if (!_commonModules) {
+        _commonModules = {};
+        var browserifySearchPaths = getBrowserifySearchPaths();
+        Object.keys(browserifySearchPaths).forEach(function (hostType) {
+            _commonModules[hostType] = [];
+            browserifySearchPaths[hostType].forEach(function (searchPath) {
+                fs.readdirSync(searchPath).forEach(function (file) {
+                    if (path.extname(file) === '.js') {
+                        _commonModules[hostType].push({name: path.basename(file, '.js'), file: path.join(searchPath, file)});
+                    }
+                });
+            });
+        });
+    }
+    return hostType? _commonModules[hostType] : _commonModules;
 }
 
 module.exports.initialize = initialize;
