@@ -10,10 +10,23 @@ var pluginHandlers = {};
 customElements.initialize();
 socket.initialize(pluginHandlers);
 
-window.addEventListener('load', function () {
+window.addEventListener('DOMContentLoaded', function () {
+    sizeContent();
+
     // Initialize standard modules, then plugins
     db.initialize().then(initializePlugins);
 });
+
+window.addEventListener('resize', function () {
+    sizeContent();
+});
+
+function sizeContent() {
+    // Size the content area to keep column widths fixed
+    var bodyWidth = parseInt(window.getComputedStyle(document.body).width);
+    var contentWidth = (Math.floor((bodyWidth - 1) / 333) || 1) * 333;
+    document.querySelector('.cordova-main').style.width = contentWidth + 'px';
+}
 
 var pluginMessages = {};
 function applyPlugins(plugins, clobberScope) {

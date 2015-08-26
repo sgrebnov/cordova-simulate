@@ -69,8 +69,8 @@ body /deep/ .cordova-widget {
     font-size: 14px;
 }
 
-/* First selector is for browsers with shadow dom, second selector for browsers without */
-cordova-panel > .cordova-group,  cordova-panel > section > section > .cordova-group {
+/* 12px margin around top level items in the content a panel */
+body /deep/ .cordova-content > ::content > * {
     margin: 12px;
     position: relative;
 }
@@ -106,13 +106,12 @@ body /deep/ input {
 }
 
 body /deep/ .cordova-overlay {
-    position: absolute;
+    position: fixed;
     left: 0;
     top: 0;
     z-index: 10000;
     width: 100%;
     height: 100%;
-    padding: 5px;
     background-color: rgba(245, 245, 245, 0.9);
 
     display: -webkit-box;
@@ -120,25 +119,6 @@ body /deep/ .cordova-overlay {
     display: -ms-flexbox;
     display: -webkit-flex;
     display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-body /deep/ .cordova-no-plugins {
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: 10000;
-    width: 100%;
-    height: 100%;
-    padding: 5px;
-
-    display: -webkit-box;
-    display: -moz-box;
-    display: -ms-flexbox;
-    display: -webkit-flex;
-    display: flex;
-    flex-flow: column;
     justify-content: center;
     align-items: center;
 }
@@ -181,6 +161,12 @@ body /deep/ isindex {
     margin-left: 0;
     margin-right: 0;
     resize: none;
+}
+
+body /deep/ textarea {
+    padding: 2px 4px;
+    width: calc(100% - 10px); /* Account for padding and border */
+    overflow-y: auto;
 }
 
 body /deep/ input[type^=text],

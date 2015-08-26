@@ -250,6 +250,7 @@ function processPluginHtml(html, pluginId) {
 function streamSimHostCss(filePath, request, response) {
     // Replace '/deep/' combinator
     cordovaServe.sendStream(filePath, request, response, fs.createReadStream(filePath)
+        .pipe(replaceStream('> ::content >', '>'))
         .pipe(replaceStream(/\^|\/shadow\/|\/shadow-deep\/|::shadow|\/deep\/|::content|>>>/g, ' ')), true);
 }
 
