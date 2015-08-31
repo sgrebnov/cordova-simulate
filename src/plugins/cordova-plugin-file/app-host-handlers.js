@@ -19,30 +19,8 @@
  *
  */
 
-module.exports = {
-    // This variable is required on Windows so that plugin works
-    Windows: {
-        Storage: {
-            ApplicationData: {
-                current: {}
-            },
-            CreationCollisionOption: {
-                generateUniqueName: function () {}
-            },
-            FileIO: {},
-            Pickers: {
-                PickerLocationId: {}
-            }
-        },
-        Media: {
-            Capture: {
-                MediaStreamType: {}
-            }
-        },
-        UI: {
-            WebUI: {
-                WebUIApplication: {}
-            }
-        }
-    }
+module.exports = function (messages) {
+    var isWebkit = window.webkitRequestFileSystem && window.webkitResolveLocalFileSystemURL;
+
+    return isWebkit ? require('./app-host-webkit-handlers') : require('./app-host-non-webkit-handlers');
 };

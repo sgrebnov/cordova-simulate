@@ -19,14 +19,26 @@
  *
  */
 
-// https://github.com/apache/cordova-plugin-media/
-
-// objects below are required for Windows platform to work correctly
-var Windows = Windows || {};
-Windows.Storage = Windows.Storage || {};
-Windows.Storage.StorageFolder = Windows.Storage.StorageFolder || {};
-Windows.Storage.StorageFile = Windows.Storage.StorageFile || {};
-
 module.exports = {
-    Windows: Windows
+    // This variable is required on Windows so that plugin works
+    Windows: {
+        Storage: {
+            StorageFolder: {
+                getFolderFromPathAsync: function () {}
+            },
+            StorageFile: {
+                getFileFromPathAsync: function () {}
+            },
+            ApplicationData: {
+                current: {
+                    localFolder: {
+                        path: ''
+                    },
+                    temporaryFolder: {
+                        path: ''
+                    }
+                }
+            }
+        }
+    }
 };
