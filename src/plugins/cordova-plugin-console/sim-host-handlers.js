@@ -20,14 +20,21 @@
  */
 
 module.exports = function (messages) {
-
-    function emptyHandler() {}
+    function logLevelHandler(successCallback, errorCallback, args) {
+        var level = args[0];
+        var message = args[1];
+        switch (level) {
+            case 'LOG': window.console.log(message); break;
+            case 'ERROR': window.console.error('ERROR: ' + message); break;
+            case 'WARN':  window.console.warn('WARN: '  + message); break;
+            case 'INFO':  window.console.info('INFO: '  + message); break;
+            case 'DEBUG': window.console.debug('DEBUG: ' + message); break;
+        }
+    }
 
     return {
         'Console': {
-            // This prevents 'unhandled exec call' error popup on sim-host.
-            // Logging functionality works since console.log is supported natively.
-            'logLevel': emptyHandler,
+            'logLevel': logLevelHandler,
         }
     };
 };
